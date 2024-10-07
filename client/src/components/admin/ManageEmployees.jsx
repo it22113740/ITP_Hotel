@@ -41,16 +41,17 @@ const { Option } = Select;
 
 function ManageEmployees() {
   const [employees, setEmployees] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(true);
   const [spotlightData, setSpotlightData] = useState(null);
   const [spotlightLoading, setSpotlightLoading] = useState(true);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState(null);
   const [form] = Form.useForm();
-  
+  const [searchTerm, setSearchTerm] = useState("");
+
   // State to manage selected fields for PDF report
   const [selectedFields, setSelectedFields] = useState([
+    "employeeId", // Added Employee ID
     "firstName",
     "lastName",
     "email",
@@ -96,6 +97,7 @@ function ManageEmployees() {
     
     const headers = selectedFields.map((field) => {
       switch (field) {
+        case "employeeId": return "Employee ID"; // Added Employee ID header
         case "firstName": return "First Name";
         case "lastName": return "Last Name";
         case "email": return "Email";
@@ -125,6 +127,7 @@ function ManageEmployees() {
   };
 
   const availableFields = [
+    { label: "Employee ID", value: "employeeId" }, // Added Employee ID option
     { label: "First Name", value: "firstName" },
     { label: "Last Name", value: "lastName" },
     { label: "Email", value: "email" },
@@ -297,94 +300,133 @@ function ManageEmployees() {
   };
 
   return (
-    <div className="manage-employees" style={{ padding: "24px" }}>
+    <div className="manage-employees-1234" style={{ padding: "24px" }}>
       <EmployeeSpotlight />
       <Card
+        className="margin-top"
         title={<Title level={4}>Existing Employees</Title>}
         extra={
           <Space>
-            <Checkbox.Group
-              options={availableFields}
-              defaultValue={selectedFields}
-              onChange={handleFieldChange}
-            />
-            <Button
-              type="primary"
-              icon={<DownloadOutlined />}
-              onClick={downloadPDF}
-            >
-              Download PDF
-            </Button>
-            <Button type="primary" icon={<PlusOutlined />} onClick={() => showModal()}>
+            <Button type="primary" onClick={() => showModal(null)} icon={<PlusOutlined />}>
               Add Employee
             </Button>
+            
           </Space>
         }
       >
-        {loading ? (
-          <Spin />
-        ) : (
-          <Table
-            dataSource={employees.filter((employee) =>
-              `${employee.firstName} ${employee.lastName}`.toLowerCase().includes(searchTerm.toLowerCase())
-            )}
-            columns={columns}
-            rowKey="employeeId"
-            pagination={{ pageSize: 5 }}
-          />
-        )}
+        <div style={{ marginTop: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+  <div>
+    <Title level={5}>Select Fields for PDF Report</Title>
+    <Checkbox.Group
+      options={availableFields}
+      value={selectedFields}
+      onChange={handleFieldChange}
+    />
+  </div>
+  <Button type="primary" icon={<DownloadOutlined />} onClick={downloadPDF}>
+    Download PDF
+  </Button>
+</div>
+        <Input
+          placeholder="Search employees"
+          className="margin-top"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{ marginBottom: "16px" }}
+          prefix={<SearchOutlined />}
+        />
+        <Table
+          columns={columns}
+          dataSource={employees.filter((employee) => 
+            employee.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            employee.lastName.toLowerCase().includes(searchTerm.toLowerCase())
+          )}
+          rowKey="employeeId"
+          loading={loading}
+        />
       </Card>
-
       <Modal
         title={editingEmployee ? "Edit Employee" : "Add Employee"}
         visible={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         footer={null}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleAddEdit}
-        >
-          <Form.Item name="firstName" label="First Name" rules={[{ required: true }]}>
+        <Form form={form} onFinish={handleAddEdit}>
+          <Form.Item
+            name="firstName"
+            label="First Name"
+            rules={[{ required: true, message: "Please input the first name!" }]}
+          >
             <Input />
           </Form.Item>
-          <Form.Item name="lastName" label="Last Name" rules={[{ required: true }]}>
+          <Form.Item
+            name="lastName"
+            label="Last Name"
+            rules={[{ required: true, message: "Please input the last name!" }]}
+          >
             <Input />
           </Form.Item>
-          <Form.Item name="email" label="Email" rules={[{ required: true, type: "email" }]}>
+          <Form.Item
+            name="email"
+            label="Email"
+            rules={[{ required: true, message: "Please input the email!" }]}
+          >
             <Input />
           </Form.Item>
-          <Form.Item name="username" label="Username" rules={[{ required: true }]}>
+          <Form.Item
+            name="username"
+            label="Username"
+            rules={[{ required: true, message: "Please input the username!" }]}
+          >
             <Input />
           </Form.Item>
-          <Form.Item name="department" label="Department" rules={[{ required: true }]}>
+          <Form.Item
+            name="department"
+            label="Department"
+            rules={[{ required: true, message: "Please select a department!" }]}
+          >
             <Select>
+              <Option value="HR">HR</Option>
+              <Option value="Finance">Finance</Option>
+              <Option value="IT">IT</Option>
               <Option value="Sales">Sales</Option>
-              <Option value="Engineering">Engineering</Option>
               <Option value="Marketing">Marketing</Option>
-              {/* Add more departments as needed */}
             </Select>
           </Form.Item>
-          <Form.Item name="customerSatisfaction" label="Customer Satisfaction" rules={[{ required: true }]}>
-            <Input type="number" min={0} max={5} />
+          <Form.Item
+            name="imageUrl"
+            label="Image URL"
+          >
+            <Input />
           </Form.Item>
-          <Form.Item name="tasksCompleted" label="Tasks Completed" rules={[{ required: true }]}>
+          <Form.Item
+            name="customerSatisfaction"
+            label="Customer Satisfaction"
+            rules={[{ required: true, message: "Please input customer satisfaction!" }]}
+          >
             <Input type="number" />
           </Form.Item>
-          <Form.Item name="recentAchievement" label="Recent Achievement">
-            <Input.TextArea />
+          <Form.Item
+            name="tasksCompleted"
+            label="Tasks Completed"
+            rules={[{ required: true, message: "Please input tasks completed!" }]}
+          >
+            <Input type="number" />
           </Form.Item>
-          <Form.Item name="imageUrl" label="Image URL">
+          <Form.Item
+            name="recentAchievement"
+            label="Recent Achievement"
+          >
             <Input />
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit">
-              {editingEmployee ? "Update" : "Add"}
+              Submit
             </Button>
           </Form.Item>
         </Form>
       </Modal>
+      
     </div>
   );
 }
