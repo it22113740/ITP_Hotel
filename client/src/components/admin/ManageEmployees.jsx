@@ -346,82 +346,97 @@ function ManageEmployees() {
         />
       </Card>
       <Modal
-        title={editingEmployee ? "Edit Employee" : "Add Employee"}
+        title={
+          <Title level={4}>
+            {editingEmployee ? "Edit Employee" : "Add New Employee"}
+          </Title>
+        }
         visible={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         footer={null}
+        width={600}
       >
-        <Form form={form} onFinish={handleAddEdit}>
+        <Form form={form} onFinish={handleAddEdit} layout="vertical">
           <Form.Item
-            name="firstName"
-            label="First Name"
-            rules={[{ required: true, message: "Please input the first name!" }]}
+            name="imageUrl"
+            label="Profile Picture URL"
+            rules={[
+              {
+                required: true,
+                type: "url",
+                message: "Please enter a valid URL",
+              },
+            ]}
           >
-            <Input />
+            <Input placeholder="Enter image URL" />
           </Form.Item>
-          <Form.Item
-            name="lastName"
-            label="Last Name"
-            rules={[{ required: true, message: "Please input the last name!" }]}
-          >
-            <Input />
-          </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="firstName"
+                label="First Name"
+                rules={[{ required: true }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="lastName"
+                label="Last Name"
+                rules={[{ required: true }]}
+              >
+                <Input />
+              </Form.Item>
+            </Col>
+          </Row>
           <Form.Item
             name="email"
             label="Email"
-            rules={[{ required: true, message: "Please input the email!" }]}
+            rules={[{ required: true, type: "email" }]}
           >
             <Input />
           </Form.Item>
           <Form.Item
             name="username"
             label="Username"
-            rules={[{ required: true, message: "Please input the username!" }]}
+            rules={[{ required: true }]}
           >
             <Input />
           </Form.Item>
           <Form.Item
             name="department"
             label="Department"
-            rules={[{ required: true, message: "Please select a department!" }]}
+            rules={[{ required: true }]}
           >
-            <Select>
-              <Option value="HR">HR</Option>
+            <Select placeholder="Select a department">
+              <Option value="HR">Human Resources</Option>
+              <Option value="IT">Information Technology</Option>
               <Option value="Finance">Finance</Option>
-              <Option value="IT">IT</Option>
-              <Option value="Sales">Sales</Option>
               <Option value="Marketing">Marketing</Option>
+              <Option value="Operations">Operations</Option>
             </Select>
-          </Form.Item>
-          <Form.Item
-            name="imageUrl"
-            label="Image URL"
-          >
-            <Input />
           </Form.Item>
           <Form.Item
             name="customerSatisfaction"
             label="Customer Satisfaction"
-            rules={[{ required: true, message: "Please input customer satisfaction!" }]}
+            rules={[{ required: true }]}
           >
-            <Input type="number" />
+            <Input type="number" min={0} max={5} />
           </Form.Item>
           <Form.Item
             name="tasksCompleted"
             label="Tasks Completed"
-            rules={[{ required: true, message: "Please input tasks completed!" }]}
+            rules={[{ required: true }]}
           >
-            <Input type="number" />
+            <Input type="number" min={0} />
           </Form.Item>
-          <Form.Item
-            name="recentAchievement"
-            label="Recent Achievement"
-          >
-            <Input />
+          <Form.Item name="recentAchievement" label="Recent Achievement">
+            <Input.TextArea rows={4} />
           </Form.Item>
           <Form.Item>
-            <Button type="primary" htmlType="submit">
-              Submit
+            <Button type="primary" htmlType="submit" block>
+              {editingEmployee ? "Update" : "Add"} Employee
             </Button>
           </Form.Item>
         </Form>
