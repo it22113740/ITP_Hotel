@@ -3,6 +3,7 @@ const router = express.Router();
 const employeeModel = require('../models/Employee');
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
+const EmailService = require('../utils/emailService');
 
 // Helper function to generate unique employee ID
 async function generateUniqueEmployeeId() {
@@ -98,6 +99,9 @@ router.post('/addEmployee', async (req, res) => {
             createdAt: savedUser.createdAt,
             updatedAt: savedUser.updatedAt
         };
+
+        // Send welcome email with temporary password
+        await EmailService.sendWelcomeEmail(email, { firstName, lastName, password: randomPwd });
 
         res.status(201).json({
             message: 'Employee added and registered as user successfully',
@@ -240,6 +244,16 @@ router.post('/addLeave', async (req, res) => {
         res.status(200).json({ message: 'Leave added successfully', leaves: employee.leaves });
     } catch (error) {
         res.status(500).json({ message: 'Server error', error });
+    }
+});
+
+// Route to get employee count
+router.get('/getEmployeeCount', async (req, res) => {
+    try {
+        const employeeCount = await employeeModel.countDocuments();
+        res.json({ count: employeeCount });
+    } catch (err) {
+        res.status(500).json({ message: 'Server error', error: err.message });
     }
 });
 

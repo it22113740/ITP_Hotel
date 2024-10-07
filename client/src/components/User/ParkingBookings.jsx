@@ -78,6 +78,19 @@ function ParkingBookings() {
         }
     };
 
+    const handleCancelRequest = async () => {
+        try {
+            await axios.post("/api/parking/request-cancel", {
+                parkingId: selectedParkingId,
+            });
+            message.success("Cancellation request submitted successfully.");
+            fetchBookings(); // Refresh the bookings list after submission
+            setIsDeleteModalVisible(false); // Close delete modal
+        } catch (error) {
+            message.error("Failed to submit cancellation request.");
+        }
+    };
+
     // Opens the edit modal and populates it with the selected booking's data
     const handleEdit = (record) => {
         setEditingBooking(record);
@@ -211,15 +224,16 @@ function ParkingBookings() {
             </Modal>
 
             <Modal
-                title="Confirm Delete"
-                visible={isDeleteModalVisible}
-                onOk={handleDelete}
-                onCancel={() => setIsDeleteModalVisible(false)}
-                okText="Yes, Delete"
-                cancelText="Cancel"
-            >
-                <p>Are you sure you want to delete this booking?</p>
-            </Modal>
+    title="Confirm Cancellation Request"
+    visible={isDeleteModalVisible}
+    onOk={handleCancelRequest}
+    onCancel={() => setIsDeleteModalVisible(false)}
+    okText="Yes, Request Cancel"
+    cancelText="Cancel"
+>
+    <p>Are you sure you want to request the cancellation of this booking?</p>
+</Modal>
+
         </div>
     );
 }

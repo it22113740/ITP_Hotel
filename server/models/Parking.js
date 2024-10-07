@@ -24,6 +24,10 @@ const parkingSchema = new mongoose.Schema({
     vehicleNumber : {
         type: String,
         required: true,
+    },status: {
+        type: String,
+        enum: ['pending', 'approved', 'declined'],
+        default: 'approved', // Default status when created
     }
 
 }, { timestamps: true });

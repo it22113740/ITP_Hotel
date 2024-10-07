@@ -20,7 +20,10 @@ import {
   Space,
   Popconfirm,
   Select,
+  Checkbox,
 } from "antd";
+import { jsPDF } from "jspdf";
+import "jspdf-autotable"; // Import the jsPDF autotable plugin
 import {
   UserOutlined,
   TrophyOutlined,
@@ -45,6 +48,18 @@ function ManageEmployees() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingEmployee, setEditingEmployee] = useState(null);
   const [form] = Form.useForm();
+  
+  // State to manage selected fields for PDF report
+  const [selectedFields, setSelectedFields] = useState([
+    "firstName",
+    "lastName",
+    "email",
+    "username",
+    "department",
+    "customerSatisfaction",
+    "tasksCompleted",
+    "recentAchievement",
+  ]);
 
   useEffect(() => {
     fetchEmployees();
@@ -54,9 +69,7 @@ function ManageEmployees() {
   const fetchSpotlightData = async () => {
     setSpotlightLoading(true);
     try {
-      const response = await axios.get(
-        "http://localhost:5000/api/employee/spotlight"
-      );
+      const response = await axios.get("http://localhost:5000/api/employee/spotlight");
       setSpotlightData(response.data);
     } catch (error) {
       message.error("Failed to fetch employee spotlight data");
@@ -68,9 +81,7 @@ function ManageEmployees() {
   const fetchEmployees = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(
-        "http://localhost:5000/api/employee/getEmployees"
-      );
+      const response = await axios.get("http://localhost:5000/api/employee/getEmployees");
       setEmployees(response.data || []);
     } catch (error) {
       message.error("Failed to fetch employees");
@@ -79,87 +90,76 @@ function ManageEmployees() {
     }
   };
 
-  // CSV download function (frontend only)
-  const downloadCSV = () => {
-    // Define the headers for CSV
-    const headers = [
-      "First Name",
-      "Last Name",
-      "Email",
-      "Username",
-      "Department",
-      "Customer Satisfaction",
-      "Tasks Completed",
-      "Recent Achievement",
-    ];
-
-    // Map employee data into CSV format
-    const csvData = employees.map((employee) => [
-      employee.firstName,
-      employee.lastName,
-      employee.email,
-      employee.username,
-      employee.department,
-      employee.customerSatisfaction,
-      employee.tasksCompleted,
-      employee.recentAchievement,
-    ]);
-
-    // Convert the headers and data into a CSV string
-    let csvString = `${headers.join(",")}\n`;
-    csvData.forEach((row) => {
-      csvString += `${row.join(",")}\n`;
+  // Function to generate PDF report
+  const downloadPDF = () => {
+    const doc = new jsPDF();
+    
+    const headers = selectedFields.map((field) => {
+      switch (field) {
+        case "firstName": return "First Name";
+        case "lastName": return "Last Name";
+        case "email": return "Email";
+        case "username": return "Username";
+        case "department": return "Department";
+        case "customerSatisfaction": return "Customer Satisfaction";
+        case "tasksCompleted": return "Tasks Completed";
+        case "recentAchievement": return "Recent Achievement";
+        default: return "";
+      }
     });
 
-    // Create a Blob from the CSV string and trigger download
-    const blob = new Blob([csvString], { type: "text/csv" });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.setAttribute("hidden", "");
-    a.setAttribute("href", url);
-    a.setAttribute("download", "employees.csv");
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    const data = employees.map((employee) =>
+      selectedFields.map((field) => employee[field])
+    );
+
+    doc.autoTable({
+      head: [headers],
+      body: data,
+    });
+
+    doc.save("employees_report.pdf");
   };
+
+  const handleFieldChange = (checkedValues) => {
+    setSelectedFields(checkedValues);
+  };
+
+  const availableFields = [
+    { label: "First Name", value: "firstName" },
+    { label: "Last Name", value: "lastName" },
+    { label: "Email", value: "email" },
+    { label: "Username", value: "username" },
+    { label: "Department", value: "department" },
+    { label: "Customer Satisfaction", value: "customerSatisfaction" },
+    { label: "Tasks Completed", value: "tasksCompleted" },
+    { label: "Recent Achievement", value: "recentAchievement" },
+  ];
 
   const handleAddEdit = async (values) => {
     try {
       const employeeData = {
         ...values,
-        imageUrl: values.imageUrl || "", // Ensure imageUrl is included
+        imageUrl: values.imageUrl || "",
       };
 
       if (editingEmployee) {
-        await axios.put(
-          `http://localhost:5000/api/employee/${editingEmployee.employeeId}`,
-          employeeData
-        );
+        await axios.put(`http://localhost:5000/api/employee/${editingEmployee.employeeId}`, employeeData);
         message.success("Employee updated successfully");
       } else {
-        await axios.post(
-          "http://localhost:5000/api/employee/addEmployee",
-          employeeData
-        );
+        await axios.post("http://localhost:5000/api/employee/addEmployee", employeeData);
         message.success("Employee added successfully");
       }
       setIsModalVisible(false);
       fetchEmployees();
       fetchSpotlightData();
     } catch (error) {
-      message.error(
-        typeof error.response?.data === "string" 
-          ? error.response.data 
-          : "Failed to save employee"
-      );      
+      message.error(typeof error.response?.data === "string" ? error.response.data : "Failed to save employee");
     }
   };
 
   const handleDelete = async (employeeId) => {
     try {
-      await axios.post("http://localhost:5000/api/employee/deleteEmployee", {
-        employeeId,
-      });
+      await axios.post("http://localhost:5000/api/employee/deleteEmployee", { employeeId });
       message.success("Employee deleted successfully");
       fetchEmployees();
       fetchSpotlightData();
@@ -219,10 +219,7 @@ function ManageEmployees() {
       render: (_, employee) => (
         <Space>
           <Tooltip title="Edit">
-            <Button
-              icon={<EditOutlined />}
-              onClick={() => showModal(employee)}
-            />
+            <Button icon={<EditOutlined />} onClick={() => showModal(employee)} />
           </Tooltip>
           <Tooltip title="Delete">
             <Popconfirm
@@ -306,136 +303,84 @@ function ManageEmployees() {
         title={<Title level={4}>Existing Employees</Title>}
         extra={
           <Space>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => showModal()}
-            >
-              Add New Employee
-            </Button>
+            <Checkbox.Group
+              options={availableFields}
+              defaultValue={selectedFields}
+              onChange={handleFieldChange}
+            />
             <Button
               type="primary"
               icon={<DownloadOutlined />}
-              onClick={downloadCSV}
+              onClick={downloadPDF}
             >
-              Download CSV
+              Download PDF
+            </Button>
+            <Button type="primary" icon={<PlusOutlined />} onClick={() => showModal()}>
+              Add Employee
             </Button>
           </Space>
         }
-        style={{ marginTop: "24px" }}
       >
-        <Input.Search
-          placeholder="Search employees"
-          allowClear
-          enterButton={<SearchOutlined />}
-          size="large"
-          onSearch={(value) => setSearchTerm(value)}
-          style={{ marginBottom: 16 }}
-        />
-        <Table
-          loading={loading}
-          dataSource={employees.filter((e) =>
-            [e.firstName, e.lastName, e.department, e.email, e.username].some(
-              (val) => val.toLowerCase().includes(searchTerm.toLowerCase())
-            )
-          )}
-          columns={columns}
-          rowKey="employeeId"
-          pagination={{ pageSize: 5 }}
-        />
+        {loading ? (
+          <Spin />
+        ) : (
+          <Table
+            dataSource={employees.filter((employee) =>
+              `${employee.firstName} ${employee.lastName}`.toLowerCase().includes(searchTerm.toLowerCase())
+            )}
+            columns={columns}
+            rowKey="employeeId"
+            pagination={{ pageSize: 5 }}
+          />
+        )}
       </Card>
+
       <Modal
-        title={
-          <Title level={4}>
-            {editingEmployee ? "Edit Employee" : "Add New Employee"}
-          </Title>
-        }
+        title={editingEmployee ? "Edit Employee" : "Add Employee"}
         visible={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         footer={null}
-        width={600}
       >
-        <Form form={form} onFinish={handleAddEdit} layout="vertical">
-          <Form.Item
-            name="imageUrl"
-            label="Profile Picture URL"
-            rules={[
-              {
-                required: true,
-                type: "url",
-                message: "Please enter a valid URL",
-              },
-            ]}
-          >
-            <Input placeholder="Enter image URL" />
-          </Form.Item>
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="firstName"
-                label="First Name"
-                rules={[{ required: true }]}
-              >
-                <Input />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="lastName"
-                label="Last Name"
-                rules={[{ required: true }]}
-              >
-                <Input />
-              </Form.Item>
-            </Col>
-          </Row>
-          <Form.Item
-            name="email"
-            label="Email"
-            rules={[{ required: true, type: "email" }]}
-          >
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleAddEdit}
+        >
+          <Form.Item name="firstName" label="First Name" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
-          <Form.Item
-            name="username"
-            label="Username"
-            rules={[{ required: true }]}
-          >
+          <Form.Item name="lastName" label="Last Name" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
-          <Form.Item
-            name="department"
-            label="Department"
-            rules={[{ required: true }]}
-          >
-            <Select placeholder="Select a department">
-              <Option value="HR">Human Resources</Option>
-              <Option value="IT">Information Technology</Option>
-              <Option value="Finance">Finance</Option>
+          <Form.Item name="email" label="Email" rules={[{ required: true, type: "email" }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="username" label="Username" rules={[{ required: true }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="department" label="Department" rules={[{ required: true }]}>
+            <Select>
+              <Option value="Sales">Sales</Option>
+              <Option value="Engineering">Engineering</Option>
               <Option value="Marketing">Marketing</Option>
-              <Option value="Operations">Operations</Option>
+              {/* Add more departments as needed */}
             </Select>
           </Form.Item>
-          <Form.Item
-            name="customerSatisfaction"
-            label="Customer Satisfaction"
-            rules={[{ required: true }]}
-          >
+          <Form.Item name="customerSatisfaction" label="Customer Satisfaction" rules={[{ required: true }]}>
             <Input type="number" min={0} max={5} />
           </Form.Item>
-          <Form.Item
-            name="tasksCompleted"
-            label="Tasks Completed"
-            rules={[{ required: true }]}
-          >
-            <Input type="number" min={0} />
+          <Form.Item name="tasksCompleted" label="Tasks Completed" rules={[{ required: true }]}>
+            <Input type="number" />
           </Form.Item>
           <Form.Item name="recentAchievement" label="Recent Achievement">
-            <Input.TextArea rows={4} />
+            <Input.TextArea />
+          </Form.Item>
+          <Form.Item name="imageUrl" label="Image URL">
+            <Input />
           </Form.Item>
           <Form.Item>
-            <Button type="primary" htmlType="submit" block>
-              {editingEmployee ? "Update" : "Add"} Employee
+            <Button type="primary" htmlType="submit">
+              {editingEmployee ? "Update" : "Add"}
             </Button>
           </Form.Item>
         </Form>
