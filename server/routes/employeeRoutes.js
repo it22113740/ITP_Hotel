@@ -247,6 +247,25 @@ router.post('/addLeave', async (req, res) => {
     }
 });
 
+// Route to get all leaves for all employees
+router.get('/getAllLeaves', async (req, res) => {
+    try {
+        const employees = await employeeModel.find().populate('leaves'); // Assuming 'leaves' is a populated reference, if not, just remove it
+
+        const allLeaves = employees.reduce((acc, employee) => {
+            if (employee.leaves) {
+                acc.push(...employee.leaves);
+            }
+            return acc;
+        }, []);
+
+        res.status(200).json({ leaves: allLeaves });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error });
+    }
+});
+
+
 // Route to get employee count
 router.get('/getEmployeeCount', async (req, res) => {
     try {
@@ -256,5 +275,58 @@ router.get('/getEmployeeCount', async (req, res) => {
         res.status(500).json({ message: 'Server error', error: err.message });
     }
 });
+
+// Route to approve a leave request
+router.post('/approveLeave', async (req, res) => {
+    const { empID, leaveID } = req.body;
+
+    try {
+        const employee = await employeeModel.findOne({ employeeId: empID });
+        if (!employee) {
+            return res.status(404).json({ message: 'Employee not found' });
+        }
+
+        // Find the leave request
+        const leave = employee.leaves.find(leave => leave.leaveID === leaveID);
+        if (!leave) {
+            return res.status(404).json({ message: 'Leave request not found' });
+        }
+
+        // Update leave status to Approved
+        leave.status = 'Approved';
+        await employee.save();
+
+        res.status(200).json({ message: 'Leave request approved successfully', leaves: employee.leaves });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error });
+    }
+});
+
+// Route to deny a leave request
+router.post('/denyLeave', async (req, res) => {
+    const { empID, leaveID } = req.body;
+
+    try {
+        const employee = await employeeModel.findOne({ employeeId: empID });
+        if (!employee) {
+            return res.status(404).json({ message: 'Employee not found' });
+        }
+
+        // Find the leave request
+        const leave = employee.leaves.find(leave => leave.leaveID === leaveID);
+        if (!leave) {
+            return res.status(404).json({ message: 'Leave request not found' });
+        }
+
+        // Update leave status to Denied
+        leave.status = 'Denied';
+        await employee.save();
+
+        res.status(200).json({ message: 'Leave request denied successfully', leaves: employee.leaves });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error });
+    }
+});
+
 
 module.exports = router;

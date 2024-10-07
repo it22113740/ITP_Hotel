@@ -31,7 +31,14 @@ const employeeSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
-        leaves: [],
+        leaves: [
+            {
+                leaveID: { type: String, required: true },
+                fromDate: { type: Date, required: true },
+                toDate: { type: Date, required: true },
+                status: { type: String, enum: ['Pending', 'Approved', 'Denied'], default: 'Pending' }
+            }
+        ],
         department: {
             type: String,
             default: "General",

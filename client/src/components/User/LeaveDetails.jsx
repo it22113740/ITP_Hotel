@@ -81,6 +81,12 @@ const LeaveDetails = () => {
         setFromDate(null);
         setToDate(null);
     };
+    // Function to calculate the difference between 'fromDate' and 'toDate'
+    const calculateDateDifference = (fromDate, toDate) => {
+        const startDate = moment(fromDate);
+        const endDate = moment(toDate);
+        return endDate.diff(startDate, "days") + 1; // Including both start and end date
+    };
 
     // Define the columns for the leaves table
     const columns = [
@@ -88,6 +94,12 @@ const LeaveDetails = () => {
         { title: "From Date", dataIndex: "fromDate", key: "fromDate" },
         { title: "To Date", dataIndex: "toDate", key: "toDate" },
         { title: "Status", dataIndex: "status", key: "status" },
+        {
+            title: "Leave Duration (Days)", // New column for the date difference
+            key: "duration",
+            render: (record) =>
+                calculateDateDifference(record.fromDate, record.toDate),
+        },
     ];
 
     return (
