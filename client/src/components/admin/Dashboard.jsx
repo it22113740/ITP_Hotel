@@ -12,6 +12,8 @@ function Dashboard() {
     const [bookings, setBookings] = useState([]);
     const [eventCount, setEventCount] = useState(0); // State for storing total event count
     const [feedbackCount, setFeedbackCount] = useState(0);
+    const [employeeCount, setEmployeeCount] = useState(0);
+    const [parkingCount, setParkingCount] = useState(0);
     const [feedbackRatings, setFeedbackRatings] = useState([]);
     const [ratingSummary, setRatingSummary] = useState({
         total: 0,
@@ -31,6 +33,23 @@ function Dashboard() {
                 setFeedbackCount(response.data.count);
             } catch (error) {
                 console.error("Error fetching feedback count", error);
+            }
+        };
+        const fetchEmployeeCount = async () => {
+            try {
+                const response = await axios.get('/api/employee/getEmployeeCount');
+                setEmployeeCount(response.data.count);
+            } catch (error) {
+                console.error('Error fetching employee count', error);
+            }
+        };
+
+        const fetchPakingCount = async () => {
+            try {
+                const response = await axios.get('/api/parking/availability/today');
+                setParkingCount(response.data.totalAvailableSlots);
+            } catch (error) {
+                console.error('Error fetching booking count', error);
             }
         };
 
@@ -67,6 +86,8 @@ function Dashboard() {
         };
 
         fetchFeedbackCount();
+        fetchEmployeeCount();
+        fetchPakingCount();
         fetchFeedbackRatings();
         fetchRatingsSummary();
         fetchFeedbackLikesDislikes(); // Fetch like and dislike counts
@@ -209,7 +230,14 @@ function Dashboard() {
                 </div>
                 <div className="admin_dashboard_card card2">
                     <h1 style={{ fontSize: "30px" }}>Employees</h1>
-                    <h2 style={{ fontSize: "32px" }}>10</h2>
+                    <h2 style={{ fontSize: "32px" }}>{employeeCount}</h2>
+                    <Link to="/admin/bookings" style={{ textDecoration: "none" }}>
+                        {/* Link content */}
+                    </Link>
+                </div>
+                <div className="admin_dashboard_card card5">
+                    <h1 style={{ fontSize: "30px" }}>Available Parkings</h1>
+                    <h2 style={{ fontSize: "32px" }}>{parkingCount}</h2>
                     <Link to="/admin/bookings" style={{ textDecoration: "none" }}>
                         {/* Link content */}
                     </Link>

@@ -86,6 +86,46 @@ class EmailService {
             
         }
     }
+    static async sendWelcomeEmail(userEmail, { firstName, lastName, password }) {
+        try {
+            const logoUrl = "https://i.ibb.co/1Kp8CXg/6th-gear-Logo.png";
+
+            const mailOptions = {
+                from: `"Welcome to Sixth Gear" <${process.env.GMAIL_EMAIL}>`,
+                to: userEmail,
+                subject: `Welcome ${firstName}, Your Temporary Password`,
+                html: `
+                    <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f9f9f9; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+                        <div style="background-color: #ffffff; padding: 30px; border-radius: 10px;">
+                            <div style="text-align: center; margin-bottom: 20px;">
+                                <img src="${logoUrl}" alt="Sixth Gear Logo" style="max-width: 150px;">
+                            </div>
+                            <h2 style="color: #333333; text-align: center;">Welcome to Sixth Gear, ${firstName}!</h2>
+                            <p style="font-size: 18px; color: #555555; line-height: 1.6; text-align: center;">
+                                Thank you for joining our team! Your account has been created successfully. 
+                                Your temporary password is: <strong>${password}</strong>
+                            </p>
+                            <p style="font-size: 18px; color: #555555; line-height: 1.6; text-align: center;">
+                                Please remember to change your password after logging in.
+                            </p>
+                            <p style="font-size: 18px; color: #555555; line-height: 1.6; text-align: center;">
+                                If you have any questions, feel free to reach out to us.
+                            </p>
+                            <p style="font-size: 16px; color: #888888; text-align: center; margin-top: 40px;">
+                                Thank you,<br>
+                                The Team at Sixth Gear
+                            </p>
+                        </div>
+                    </div>
+                `
+            };
+
+            const info = await transporter.sendMail(mailOptions);
+            console.log("Welcome email sent: ", info.response);
+        } catch (error) {
+            console.error("Failed to send welcome email:", error);
+        }
+    }
 }
 
 module.exports = EmailService;
