@@ -61,20 +61,16 @@ const employeeSchema = new mongoose.Schema(
         },
         salary: {
             amount: {
-                type: Number,
-                required: true,
+                type: Number
             },
             bank: {
-                type: String,
-                required: true,
+                type: String
             },
             bankBranchNumber: {
-                type: String,
-                required: true,
+                type: String
             },
             accountNumber: {
-                type: String,
-                required: true,
+                type: String
             },
             dateAdded: {
                 type: Date,
