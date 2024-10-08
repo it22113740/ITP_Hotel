@@ -348,4 +348,21 @@ router.post('/denyLeave', async (req, res) => {
 });
 
 
+router.get('/getEmployeesByDepartment/:department', async (req, res) => {
+    const { department } = req.params;
+
+    try {
+        const employees = await employeeModel.find({ department });
+
+        if (employees.length === 0) {
+            return res.status(404).json({ message: 'No employees found in this department' });
+        }
+
+        res.json(employees);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error', error: err.message });
+    }
+});
+
+
 module.exports = router;
