@@ -7,6 +7,7 @@ function RoomListPage() {
     const [filteredRooms, setFilteredRooms] = useState([]);
     const [searchTerm, setSearchTerm] = useState("");
     const [bestSelling, setBestSelling] = useState([]);
+    const [reservations, setReservations] = useState([]); // To store reservations data
     const navigate = useNavigate(); // Hook for navigation
 
     // Fetch best-selling rooms on component mount
@@ -36,6 +37,19 @@ function RoomListPage() {
         fetchRooms();
     }, []);
 
+    // Fetch reservations to check booked rooms
+    useEffect(() => {
+        const fetchReservations = async () => {
+            try {
+                const response = await axios.get("/api/room/getBookings");
+                setReservations(response.data.bookings); // Store all reservations
+            } catch (error) {
+                console.error("Error fetching reservations:", error);
+            }
+        };
+        fetchReservations();
+    }, []);
+
     // Filter rooms based on search term
     useEffect(() => {
         const tempList = rooms.filter(
@@ -57,6 +71,11 @@ function RoomListPage() {
 
     // Retrieve the current user from localStorage
     const currentUser = JSON.parse(localStorage.getItem("currentUser"));
+
+    // Check if a room is already booked based on reservations
+    const isRoomBooked = (roomNumber) => {
+        return reservations.some((booking) => booking.roomNumber === roomNumber);
+    };
 
     const handleMoreInfo = async (roomId) => {
         try {
@@ -161,44 +180,42 @@ function RoomListPage() {
     const { lastVisitedRoom, similarRooms } = getSimilarRooms(); // Get last visited room and similar rooms
 
     // SuggestionCard component
-    const SuggestionCard = ({ room }) => (
-        <div
-            style={{
-                border: "1px solid #ddd",
-                borderRadius: "8px",
-                padding: "10px",
-                margin: "10px",
-                width: "200px",
-                textAlign: "center",
-            }}
-        >
-            <img
-                src={room.imageUrl}
-                alt={room.roomType}
+    const SuggestionCard = ({ room }) => {
+        const navigate = useNavigate(); // Initialize navigation
+    
+        // Handle navigation to the room details page
+        const handleCardClick = (roomId) => {
+            navigate(`/rooms/${roomId}`); // Navigate to the room details page based on roomId
+        };
+    
+        return (
+            <div
                 style={{
-                    width: "100%",
-                    height: "120px",
-                    objectFit: "cover",
-                    borderRadius: "4px",
+                    border: "1px solid #ddd",
+                    borderRadius: "8px",
+                    padding: "10px",
+                    margin: "10px",
+                    width: "200px",
+                    textAlign: "center",
+                    cursor: "pointer", // Change cursor to pointer to indicate it's clickable
                 }}
-            />
-            <h3 style={{ margin: "10px 0" }}>{room.roomType}</h3>
-            <p>Rs: {room.price}</p>
-            <button
-                onClick={() => handleMoreInfo(room._id)}
-                style={{
-                    backgroundColor: "#219652",
-                    color: "white",
-                    border: "none",
-                    padding: "5px 10px",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                }}
+                onClick={() => handleCardClick(room._id)} // Trigger navigation when the card is clicked
             >
-                More Info
-            </button>
-        </div>
-    );
+                <img
+                    src={room.imageUrl}
+                    alt={room.roomType}
+                    style={{
+                        width: "100%",
+                        height: "120px",
+                        objectFit: "cover",
+                        borderRadius: "4px",
+                    }}
+                />
+                <h3 style={{ margin: "10px 0" }}>{room.roomType}</h3>
+                <p>Rs: {room.price}</p>
+            </div>
+        );
+    };
 
     return (
         <div className="room-list">
@@ -244,7 +261,7 @@ function RoomListPage() {
                         </div>
                     </div>
                     {/* Recommended for You */}
-                    {lastVisitedRoom && (
+                    {currentUser && lastVisitedRoom && (
                         <div style={{ marginLeft: "20px" }}>
                             <h3 style={{ margin: "10px 0" }}>Recommended for You</h3>
                             <div
@@ -253,9 +270,7 @@ function RoomListPage() {
                                     gap: "10px",
                                 }}
                             >
-                                {/* Last Visited Room */}
                                 <SuggestionCard key={lastVisitedRoom._id} room={lastVisitedRoom} />
-                                {/* Similar Rooms */}
                                 {similarRooms.slice(0, 2).map((room) => (
                                     <SuggestionCard key={room._id} room={room} />
                                 ))}
@@ -285,8 +300,19 @@ function RoomListPage() {
                             <div className="room-price">
                                 <p>From</p>
                                 <p>Rs: {room.price}</p>
-                                <button onClick={() => handleMoreInfo(room._id)}>
-                                    More Info
+                                <button
+                                    onClick={() => handleMoreInfo(room._id)}
+                                    disabled={isRoomBooked(room.roomNumber)} // Disable the button if the room is already booked
+                                    style={{
+                                        backgroundColor: isRoomBooked(room.roomNumber) ? "#aaa" : "#219652", // Change button color when booked
+                                        color: "white",
+                                        border: "none",
+                                        padding: "5px 10px",
+                                        borderRadius: "4px",
+                                        cursor: isRoomBooked(room.roomNumber) ? "not-allowed" : "pointer",
+                                    }}
+                                >
+                                    {isRoomBooked(room.roomNumber) ? "Already Booked" : "More Info"}
                                 </button>
                             </div>
                         </div>
