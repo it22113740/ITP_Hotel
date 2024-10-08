@@ -34,7 +34,10 @@ import {
   PlusOutlined,
   SearchOutlined,
   DownloadOutlined,
+  CheckOutlined,
+  CloseOutlined
 } from "@ant-design/icons";
+
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -48,6 +51,7 @@ function ManageEmployees() {
   const [editingEmployee, setEditingEmployee] = useState(null);
   const [form] = Form.useForm();
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
 
   // State to manage selected fields for PDF report
   const [selectedFields, setSelectedFields] = useState([
@@ -83,11 +87,37 @@ function ManageEmployees() {
     setLoading(true);
     try {
       const response = await axios.get("http://localhost:5000/api/employee/getEmployees");
-      setEmployees(response.data || []);
+      const employeesWithLeaves = await Promise.all(
+        response.data.map(async (employee) => {
+          const leaveResponse = await axios.get(`http://localhost:5000/api/employee/getLeave/${employee.employeeId}`);
+          return { ...employee, leaves: leaveResponse.data.leaves || [] };
+        })
+      );
+      setEmployees(employeesWithLeaves);
     } catch (error) {
-      message.error("Failed to fetch employees");
+      message.error("Failed to fetch employees and leaves");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleApproveLeave = async (employeeId, leaveId) => {
+    try {
+      await axios.post("http://localhost:5000/api/employee/approveLeave", { empID: employeeId, leaveID: leaveId });
+      message.success("Leave approved successfully");
+      fetchEmployees(); // Refresh the data
+    } catch (error) {
+      message.error("Failed to approve leave");
+    }
+  };
+
+  const handleDenyLeave = async (employeeId, leaveId) => {
+    try {
+      await axios.post("http://localhost:5000/api/employee/denyLeave", { empID: employeeId, leaveID: leaveId });
+      message.success("Leave denied successfully");
+      fetchEmployees(); // Refresh the data
+    } catch (error) {
+      message.error("Failed to deny leave");
     }
   };
 
@@ -139,24 +169,36 @@ function ManageEmployees() {
   ];
 
   const handleAddEdit = async (values) => {
+    const formData = new FormData();
+    formData.append("firstName", values.firstName);
+    formData.append("lastName", values.lastName);
+    formData.append("email", values.email);
+    formData.append("username", values.username);
+    formData.append("department", values.department);
+    formData.append("customerSatisfaction", values.customerSatisfaction);
+    formData.append("tasksCompleted", values.tasksCompleted);
+    formData.append("recentAchievement", values.recentAchievement);
+    if (selectedFile) {
+      formData.append("profilePicture", selectedFile);
+    }
+  
     try {
-      const employeeData = {
-        ...values,
-        imageUrl: values.imageUrl || "",
+      const config = {
+        headers: { "Content-Type": "multipart/form-data" },
       };
-
+  
       if (editingEmployee) {
-        await axios.put(`http://localhost:5000/api/employee/${editingEmployee.employeeId}`, employeeData);
+        await axios.put(`http://localhost:5000/api/employee/${editingEmployee.employeeId}`, formData, config);
         message.success("Employee updated successfully");
       } else {
-        await axios.post("http://localhost:5000/api/employee/addEmployee", employeeData);
+        await axios.post("http://localhost:5000/api/employee/addEmployee", formData, config);
         message.success("Employee added successfully");
       }
       setIsModalVisible(false);
       fetchEmployees();
       fetchSpotlightData();
     } catch (error) {
-      message.error(typeof error.response?.data === "string" ? error.response.data : "Failed to save employee");
+      message.error("Failed to save employee");
     }
   };
 
@@ -236,6 +278,37 @@ function ManageEmployees() {
           </Tooltip>
         </Space>
       ),
+    },
+    {
+      title: "Leave Action",
+      key: "leaveAction",
+      render: (_, employee) => {
+        const pendingLeave = employee.leaves.find((leave) => leave.status === "Pending");
+        if (pendingLeave) {
+          return (
+            <Space>
+              <Tooltip title="Approve Leave">
+                <Button
+                  type="primary"
+                  icon={<CheckOutlined />}
+                  onClick={() => handleApproveLeave(employee.employeeId, pendingLeave.leaveID)}
+                />
+              </Tooltip>
+              <Tooltip title="Deny Leave">
+                <Popconfirm
+                  title="Are you sure you want to deny this leave?"
+                  onConfirm={() => handleDenyLeave(employee.employeeId, pendingLeave.leaveID)}
+                  okText="Yes"
+                  cancelText="No"
+                >
+                  <Button type="danger" icon={<CloseOutlined />} />
+                </Popconfirm>
+              </Tooltip>
+            </Space>
+          );
+        }
+        return <Tag color="green">No Pending Leave</Tag>;
+      },
     },
   ];
 
@@ -357,19 +430,13 @@ function ManageEmployees() {
         width={600}
       >
         <Form form={form} onFinish={handleAddEdit} layout="vertical">
-          <Form.Item
-            name="imageUrl"
-            label="Profile Picture URL"
-            rules={[
-              {
-                required: true,
-                type: "url",
-                message: "Please enter a valid URL",
-              },
-            ]}
-          >
-            <Input placeholder="Enter image URL" />
-          </Form.Item>
+        <Form.Item
+  name="profilePicture"
+  label="Profile Picture"
+  rules={[{ required: true, message: "Please upload a profile picture" }]}
+>
+  <Input type="file" onChange={(e) => setSelectedFile(e.target.files[0])} />
+</Form.Item>
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item

@@ -6,6 +6,7 @@ const { sendReminderEmail } = require('./utils/emailService'); // Email sending 
 const Reminder = require('./models/reminder'); // Reminder model
 const Event = require('./models/Event'); // Event model
 const app = express();
+const path = require('path');
 
 // Database configuration
 const dbConfig = require("./config/db");
@@ -30,6 +31,10 @@ app.use(express.json()); // Parse JSON bodies
 
 // Middleware to parse incoming requests with JSON payloads
 app.use(express.json());
+
+// Serve static files from the 'uploads' directory
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 
 // Define routes (ensure routes are applied after middleware)
 app.use("/api/catering", cateringRoutes);

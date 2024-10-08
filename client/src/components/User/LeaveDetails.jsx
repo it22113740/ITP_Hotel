@@ -90,10 +90,51 @@ const LeaveDetails = () => {
 
     // Define the columns for the leaves table
     const columns = [
-        { title: "Leave ID", dataIndex: "leaveID", key: "leaveID" },
-        { title: "From Date", dataIndex: "fromDate", key: "fromDate" },
-        { title: "To Date", dataIndex: "toDate", key: "toDate" },
-        { title: "Status", dataIndex: "status", key: "status" },
+        { 
+            title: "From Date", 
+            dataIndex: "fromDate", 
+            key: "fromDate",
+            render: (fromDate) => moment(fromDate).format('YYYY-MM-DD') // Format the date
+        },
+        { 
+            title: "To Date", 
+            dataIndex: "toDate", 
+            key: "toDate",
+            render: (toDate) => moment(toDate).format('YYYY-MM-DD') // Format the date
+        },
+        { 
+            title: "Status", 
+            dataIndex: "status", 
+            key: "status",
+            // Conditional rendering for different statuses
+            render: (status) => {
+                let color = "";
+                let backgroundColor = "";
+                if (status === "Approved") {
+                    color = "green";
+                    backgroundColor = "#e6ffed"; // Light green background
+                } else if (status === "Denied") {
+                    color = "red";
+                    backgroundColor = "#ffe6e6"; // Light red background
+                } else if (status === "Pending") {
+                    color = "orange";
+                    backgroundColor = "#fff7e6"; // Light orange background
+                }
+                return (
+                    <span
+                        style={{
+                            color,
+                            backgroundColor,
+                            padding: "5px 10px",
+                            borderRadius: "5px",
+                            display: "inline-block",
+                        }}
+                    >
+                        {status}
+                    </span>
+                );
+            }
+        },,
         {
             title: "Leave Duration (Days)", // New column for the date difference
             key: "duration",
