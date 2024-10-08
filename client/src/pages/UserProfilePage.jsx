@@ -139,9 +139,11 @@ function UserProfilePage() {
                         <Tabs.TabPane tab="Packages" key="7">
                             <Packages/>
                         </Tabs.TabPane>
-                        <Tabs.TabPane tab="Meal Orders" key="8">
-                            <Cheff/>
-                        </Tabs.TabPane>
+                        {user.email === "cheff@gmail.com" && (
+                            <Tabs.TabPane tab="Meal Orders" key="6">
+                                <Cheff/>
+                            </Tabs.TabPane>
+                        )}
                     </Tabs>
                 </ConfigProvider>
             </div>
