@@ -11,6 +11,8 @@ import {
 
 function ManageParkings() {
     const [selectedDate, setSelectedDate] = useState("");
+    const [employeesOnDutyToday, setEmployeesOnDutyToday] = useState([]);
+    const [loading, setLoading] = useState(false);
     const [availability, setAvailability] = useState([]);
     const [parkingCount, setParkingCount] = useState(0);
     const [bookings, setBookings] = useState([]);
@@ -33,9 +35,13 @@ function ManageParkings() {
     const [selectedSecurityEmployee, setSelectedSecurityEmployee] = useState(null);
     const [employees, setEmployees] = useState([]);
     const [selectedEmployeeData, setSelectedEmployeeData] = useState(null);
+    const [department, setDepartment] = useState('');
 
     // New state for booking date filter
     const [filterBookingDate, setFilterBookingDate] = useState(null);
+    const [employeeId, setEmployeeId] = useState('');
+    const [dutyDate, setDutyDate] = useState('');
+    const [message, setMessage] = useState('');
 
     // Fetch bookings on component mount
     useEffect(() => {
@@ -79,7 +85,7 @@ function ManageParkings() {
 
     const fetchEmployeesByDepartment = async (department) => {
         try {
-            const response = await axios.get(`/api/employee/getEmployeesByDepartment/${department}`);
+            const response = await axios.get(`/api/employee/getEmployeesByDepartment/Security`);
             setEmployees(response.data);
         } catch (error) {
             message.error(error.response?.data?.message || "Failed to fetch employees.");
@@ -115,18 +121,37 @@ function ManageParkings() {
         setIsDeleteModalVisible(true);
     };
 
-    const handleDelete = async () => {
+    const fetchTodayDutyEmployees = async () => {
+        setLoading(true);
         try {
-            await axios.post("/api/parking/delete", {
-                parkingId: selectedParkingId,
-            });
-            message.success("Booking deleted successfully.");
-            fetchBookings();
-            setIsDeleteModalVisible(false);
+            const response = await axios.get("/api/employee/getTodayDutyEmployees");
+            setEmployeesOnDutyToday(response.data);
+            message.success("Fetched employees with today's duty.");
         } catch (error) {
-            message.error("Failed to delete booking.");
+           
+        } finally {
+            setLoading(false);
         }
     };
+
+    // Call fetchTodayDutyEmployees when component mounts
+    useEffect(() => {
+        fetchTodayDutyEmployees();
+    }, []);
+
+  // Handles the deletion of a booking
+  const handleDelete = async () => {
+    try {
+        await axios.post("/api/parking/delete", {
+            parkingId: selectedParkingId,
+        });
+        message.success("Booking deleted successfully.");
+        fetchBookings(); // Refresh the bookings list after deletion
+        setIsDeleteModalVisible(false); // Close delete modal
+    } catch (error) {
+        
+    }
+};
     const handleApproveDecline = async (parkingId, action) => {
         try {
             await axios.post("/api/parking/cancel-booking", {
@@ -136,7 +161,7 @@ function ManageParkings() {
             message.success(`Cancellation request ${action === 'approve' ? 'approved' : 'declined'} successfully.`);
             fetchBookings(); // Refresh the bookings list after approval or decline
         } catch (error) {
-            message.error("Failed to process the cancellation request.");
+            
         }
     };
 
@@ -156,11 +181,12 @@ function ManageParkings() {
             });
             message.success("Booking updated successfully.");
             setIsModalVisible(false);
-            fetchBookings();
+            fetchBookings(); // Refresh the bookings list after update
         } catch (error) {
-            message.error("Failed to update booking.");
+           
         }
     };
+
 
     const handleDateChange = (date) => {
         setBookingDate(date);
@@ -170,6 +196,66 @@ function ManageParkings() {
         setSelectedBooking(record);
         setViewModalVisible(true);
     };
+
+    const handleAssignClick = async () => {
+        try {
+            const response = await axios.put(`/api/employee/updateDutyDate/${employeeId}`, {
+                dutyDate,
+            });
+    
+    
+            setMessage(`Duty date updated successfully: ${response.data.dutyDate}`);
+            setEmployeeId(''); // Clear employee ID
+            setDutyDate('');
+        } catch (error) {
+            setMessage(`Error: ${error.response?.data.message || error.message}`);
+        }
+    };
+    
+
+     // Internal CSS styles
+     const styles = {
+        container: {
+            padding: '20px',
+            backgroundColor: '#f7f9fc',
+            borderRadius: '8px',
+            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+            maxWidth: '400px',
+            margin: 'auto',
+            textAlign: 'center',
+        },
+        input: {
+            width: '80%',
+            padding: '10px',
+            margin: '10px 0',
+            border: '1px solid #ccc',
+            borderRadius: '5px',
+        },
+        button: {
+            backgroundColor: '#27ae60',
+            color: 'white',
+            padding: '10px 18px',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            fontSize: '16px',
+            transition: 'background-color 0.3s',
+        },
+        buttonHover: {
+            backgroundColor: '#219150',
+        },
+        message: {
+            marginTop: '15px',
+            color: '#e74c3c', // Red color for error messages
+        },
+    };
+
+    const handleDepartmentChange = (e) => {
+        const selectedDepartment = e.target.value;
+        setDepartment(selectedDepartment);
+        fetchEmployeesByDepartment(selectedDepartment);
+    };
+
 
     // Generate PDF with selected columns
     const generatePDF = () => {
@@ -226,13 +312,14 @@ function ManageParkings() {
                     <Checkbox
                         onChange={(e) => handleColumnChange(["vehicleNumber"])}
                         checked={selectedColumns.includes("vehicleNumber")}
-                        style={{ marginRight: '10px' }} 
+                        style={{ marginRight: '0px' }} 
                     />
                     Vehicle Number
                 </>
             ),
             dataIndex: "vehicleNumber",
             key: "vehicleNumber",
+            
         },
         {
             title: (
@@ -306,13 +393,13 @@ function ManageParkings() {
                         <Button onClick={() => handleApproveDecline(record.parkingId, 'decline')}>Decline</Button>
                     </>
                 )}
-                    <Button onClick={() => handleEdit(record)} className="edit-button2345">
+                    <Button onClick={() => handleEdit(record)} className="edit-button2345"  style={{ marginRight: '20px' }} >
                         Edit
                     </Button>
-                    <Button onClick={() => showDeleteModal(record.parkingId)} className="delete-button2345">
+                    <Button onClick={() => showDeleteModal(record.parkingId)} className="delete-button2345"  style={{ marginRight: '20px' }}>
                         Cancel
                     </Button>
-                    <Button onClick={() => handleView(record)} style={{ backgroundColor: 'green', color: 'white' }} className="view-button2345">
+                    <Button onClick={() => handleView(record)} style={{ backgroundColor: 'green', color: 'white' }} className="view-button2345" >
                         View
                     </Button>
                 </div>
@@ -355,87 +442,108 @@ function ManageParkings() {
             
 
 
+            <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", padding: "20px", marginTop: "20px", marginBottom: "20px" }}>
+  {/* Left Column - Assign Duty Date */}
+  <div style={{ ...styles.container, textAlign: "left", width: "30%" }}>
+    <h2>Assign Security</h2>
+    <select
+      value={employeeId}
+      onChange={(e) => setEmployeeId(e.target.value)}
+      style={styles.input}
+      onFocus={handleShowSecurityEmployees}
+    >
+      <option value="" disabled>Select Employee</option>
+      {employees.length > 0 ? (
+        employees.map((employee) => (
+          <option key={employee.id} value={employee.employeeId}>
+            {employee.firstName}
+          </option>
+        ))
+      ) : (
+        <option disabled>No Employees Available</option>
+      )}
+    </select>
+    
+    <input
+      type="date"
+      value={dutyDate}
+      onChange={(e) => setDutyDate(e.target.value)}
+      style={styles.input}
+    />
+    
+    <button
+      onClick={handleAssignClick}
+      style={styles.button}
+      onMouseOver={(e) => e.currentTarget.style.backgroundColor = styles.buttonHover.backgroundColor}
+      onMouseOut={(e) => e.currentTarget.style.backgroundColor = styles.button.backgroundColor}
+    >
+      Assign
+    </button>
+    
+    {message && <p style={styles.message}>{message}</p>}
+  </div>
 
-
-            
-            <div>
-            <DatePicker
-            onChange={(date) => setSelectedDate(date)}
-            value={selectedDate}
-            style={{ width: 200, marginRight: '10px' }}
-            placeholder="Select Date"
-        />
-        
-        {/* Security employee selection */}
-        <Select
-            style={{ width: 200 }}
-            placeholder="Select Security Employee"
-            onChange={handleEmployeeSelection}
-            onFocus={handleShowSecurityEmployees}
+  {/* Middle Column - Employees on Duty Today */}
+  <div style={{ ...styles.container, textAlign: "left", width: "30%" }}>
+    <h2>Securities on Duty Today</h2>
+    {loading ? (
+      <p>Loading employees...</p>
+    ) : employeesOnDutyToday.length > 0 ? (
+      employeesOnDutyToday.map((employee) => (
+        <div
+          key={employee._id}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            marginBottom: "10px",
+            padding: "10px",
+            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)", // Gray shadow
+            borderRadius: "8px",
+          }}
         >
-            {employees.map(employee => (
-                <Select.Option key={employee._id} value={employee._id}>
-                    {employee.firstName}
-                </Select.Option>
-            ))}
-        </Select>
-
-        
-        
-        {selectedDate && selectedEmployeeData && (
-    <div style={{
-        marginTop: '20px',
-        backgroundColor: '#fff',
-        padding: '20px',
-        borderRadius: '8px',
-        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',  // Gray shadow
-        display: 'flex',
-        alignItems: 'center',
-        flexDirection: 'column',
-        marginBottom: '20px',
-            
-        textAlign: 'center',
-        maxWidth: '300px',
-        margin: 'auto'  // Center the box
-    }}>
-        <Avatar
-            size={100}
-            src={selectedEmployeeData.imageUrl}
+          <Avatar
+            size={50}
+            src={employee.imageUrl || null}
             icon={<UserOutlined />}
-        />
-        <h3 style={{ marginTop: '15px' }}>{selectedEmployeeData.name}</h3>
-    </div>
-)}
+            style={{ marginRight: "10px" }}
+          />
+          <span>{employee.firstName} {employee.lastName}</span>
+        </div>
+      ))
+    ) : (
+      <p>No employees are on duty today.</p>
+    )}
+  </div>
 
-       
+  {/* Right Column - Total Bookings and Available Parkings */}
+  <div style={{ ...styles.container, textAlign: "left", width: "30%" }}>
+    <h4>Total Bookings: {totalBookings}</h4>
+    <h4>Total Price: ${totalPrice}</h4>
+    <h1 style={{ fontSize: "30px" }}>Available Parkings</h1>
+    <h2 style={{ fontSize: "32px" }}>{parkingCount}</h2>
+    <Link to="/admin/bookings" style={{ textDecoration: "none" }}>
+      {/* Link content */}
+    </Link>
+  </div>
+</div>
 
-            </div>
 
-            
-            <div style={{ marginTop: '20px' }}>
-                <h4>Total Bookings: {totalBookings}</h4>
-                <h4>Total Price: ${totalPrice}</h4>
-            </div>
-            <div className="admin_dashboard_card card5">
-                    <h1 style={{ fontSize: "30px" }}>Available Parkings</h1>
-                    <h2 style={{ fontSize: "32px" }}>{parkingCount}</h2>
-                    <Link to="/admin/bookings" style={{ textDecoration: "none" }}>
-                        {/* Link content */}
-                    </Link>
-                </div>
+
+
 
 <Table
-    columns={columns}
-    dataSource={filteredBookings}
-    pagination={{
-        position: ['bottomCenter'],
-        current: pagination.current,
-        pageSize: pagination.pageSize,
-        onChange: (page, pageSize) => setPagination({ current: page, pageSize }),
-        className: 'pagination-center', // Custom class for pagination
-    }}
-    rowKey="parkingId"
+  columns={columns}
+  dataSource={filteredBookings}
+  pagination={{
+    position: ['bottomCenter'],
+    current: pagination.current,
+    pageSize: pagination.pageSize,
+    onChange: (page, pageSize) => setPagination({ current: page, pageSize }),
+    style: { marginBottom: '-200px' }, // Inline style to adjust pagination spacing
+  }}
+  rowKey="parkingId"
 />
+
 
             {/* Edit Modal */}
             <Modal
@@ -443,29 +551,57 @@ function ManageParkings() {
                 visible={isModalVisible}
                 onOk={handleUpdate}
                 onCancel={() => setIsModalVisible(false)}
+                okText="Update"
+                cancelText="Cancel"
             >
-                <Input
-                    placeholder="Vehicle Number"
-                    value={vehicleNumber}
-                    onChange={(e) => setVehicleNumber(e.target.value)}
-                />
-                <DatePicker
-                    value={bookingDate}
-                    onChange={handleDateChange}
-                    placeholder="Booking Date"
-                    style={{ marginTop: '10px' }}
-                />
+                <div
+                    style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "10px",
+                    }}
+                >
+                    <div>
+                        <label>Vehicle Number:</label>
+                        <Input
+                            value={vehicleNumber}
+                            onChange={(e) => setVehicleNumber(e.target.value)}
+                        />
+                    </div>
+                    <div className="date-picker-21313">
+                        <label>Booking Date:</label>
+                        <DatePicker
+                            value={bookingDate}
+                            onChange={handleDateChange}
+                        />
+                    </div>
+                    <hr />
+                    <div>
+                        <label>Parking ID:</label>
+                        <Input value={editingBooking?.parkingId} disabled />
+                    </div>
+                    <div>
+                        <label>Package Type:</label>
+                        <Input value={editingBooking?.packageType} disabled />
+                    </div>
+                    <div>
+                        <label>Price:</label>
+                        <Input value={editingBooking?.price} disabled />
+                    </div>
+                </div>
             </Modal>
 
-            {/* Delete Confirmation Modal */}
             <Modal
                 title="Confirm Delete"
                 visible={isDeleteModalVisible}
                 onOk={handleDelete}
                 onCancel={() => setIsDeleteModalVisible(false)}
+                okText="Yes, Delete"
+                cancelText="Cancel"
             >
                 <p>Are you sure you want to delete this booking?</p>
             </Modal>
+        
 
             {/* View Modal */}
             <Modal
@@ -493,5 +629,7 @@ function ManageParkings() {
 }
 
 export default ManageParkings;
+
+
 
 

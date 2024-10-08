@@ -111,6 +111,15 @@ function ParkingPage() {
             message.error("User not found. Please log in again.");
             return;
         }
+
+
+
+        // Vehicle number validation: 3 capital letters followed by 4 digits
+    const vehicleNumberPattern = /^[A-Z]{3}[0-9]{4}$/;
+    if (!vehicleNumberPattern.test(vehicleNumber)) {
+        message.error("Vehicle number must have exactly 3 capital letters followed by 4 digits (e.g., ABC1234).");
+        return;
+    }
     
         // Check the selected date is ahead of the current date
         const currentDate = new Date();
@@ -148,6 +157,14 @@ function ParkingPage() {
             });
     
             message.success("Gate pass sent to your email.");
+
+
+             // Clear the form fields after successful booking
+        setVehicleNumber(""); // Reset vehicle number
+        setSelectedSlot("");  // Reset selected slot
+        setSelectedDate("");  // Reset selected date
+        setBookingDuration("Full day"); // Reset booking duration to default
+        setPrice(0); // Reset the price
     
             // Refresh availability after booking
             fetchAvailability();
