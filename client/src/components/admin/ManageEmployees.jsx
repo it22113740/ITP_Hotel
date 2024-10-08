@@ -482,6 +482,8 @@ function ManageEmployees() {
               <Option value="Finance">Finance</Option>
               <Option value="Marketing">Marketing</Option>
               <Option value="Operations">Operations</Option>
+              <Option value="Security">Security</Option>
+              <Option value="Cleaner">Cleaner</Option>
             </Select>
           </Form.Item>
           <Form.Item
