@@ -28,6 +28,7 @@ const ManageCateringFoods = () => {
   const [form] = Form.useForm();
   const [chefMealForm] = Form.useForm();
   const [file, setFile] = useState(null);
+  const [chefMealFile, setChefMealFile] = useState(null); // Add state for chef meal file
 
   useEffect(() => {
     fetchFoods();
@@ -47,17 +48,30 @@ const ManageCateringFoods = () => {
 
   const showChefMealModal = () => {
     chefMealForm.resetFields();
+    setChefMealFile(null); // Reset the file state
     setChefMealModalVisible(true);
   };
 
   const handleAddChefMeal = async () => {
     try {
       const values = await chefMealForm.validateFields();
-      await axios.post('http://localhost:5000/api/cheff/addOrder', values);
+      const formData = new FormData();
+      formData.append('foodImage', chefMealFile); // Append the file
+      Object.keys(values).forEach(key => {
+        formData.append(key, values[key]); // Append other form fields
+      });
+
+      await axios.post('http://localhost:5000/api/cheff/addOrder', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data', // Set the content type for the request
+        },
+      });
       message.success('Chef meal added successfully');
       setChefMealModalVisible(false);
+      chefMealForm.resetFields(); // Reset the form after submission
+      setChefMealFile(null); // Reset the file state
     } catch (error) {
-      message.error('Failed to add chef meal');
+      message.error('Failed to add chef meal: ' + (error.response?.data?.message || error.message));
     }
   };
 
@@ -94,6 +108,13 @@ const ManageCateringFoods = () => {
     const { files } = e.target;
     if (files && files.length > 0) {
       setFile(files[0]);
+    }
+  };
+
+  const handleChefMealFileChange = (e) => {
+    const { files } = e.target;
+    if (files && files.length > 0) {
+      setChefMealFile(files[0]); // Set the chef meal file
     }
   };
 
@@ -284,8 +305,8 @@ const ManageCateringFoods = () => {
         onCancel={() => setChefMealModalVisible(false)}
       >
         <Form form={chefMealForm} layout="vertical">
-          <Form.Item name="foodImageUrl" label="Food Image URL" rules={[{ required: true, message: 'Please enter the image URL' }]}>
-            <Input />
+          <Form.Item label="Food Image" required>
+            <Input type="file" onChange={handleChefMealFileChange} accept="image/*" />
           </Form.Item>
           <Form.Item name="foodName" label="Food Name" rules={[{ required: true, message: 'Please enter the food name' }]}>
             <Input />
