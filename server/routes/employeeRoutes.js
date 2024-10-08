@@ -4,6 +4,9 @@ const employeeModel = require('../models/Employee');
 const User = require('../models/User');
 const bcrypt = require('bcrypt');
 const EmailService = require('../utils/emailService');
+const upload = require('../utils/upload');
+
+
 
 // Helper function to generate unique employee ID
 async function generateUniqueEmployeeId() {
@@ -33,11 +36,12 @@ router.get('/getEmployees', async (req, res) => {
 });
 
 // Add new employee with image URL handling
-router.post('/addEmployee', async (req, res) => {
+// Add new employee with profile picture upload handling
+router.post('/addEmployee', upload.single('profilePicture'), async (req, res) => {
     try {
-        const { firstName, lastName, email, username, department, customerSatisfaction, tasksCompleted, recentAchievement, imageUrl } = req.body;
-
-        // Check if employee or customer exists with the same email/username
+        const { firstName, lastName, email, username, department, customerSatisfaction, tasksCompleted, recentAchievement } = req.body;
+        
+        // Check if employee or user exists with the same email/username
         const existingEmployee = await employeeModel.findOne({ $or: [{ email }, { username }] });
         if (existingEmployee) {
             return res.status(400).json({ message: 'Email or Username already exists as Employee' });
@@ -57,6 +61,9 @@ router.post('/addEmployee', async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(randomPwd, salt);
 
+        // If an image is uploaded, save the file path
+        const imageUrl = req.file ? `/uploads/${req.file.filename}` : "";
+
         // Create new employee
         const newEmployee = new employeeModel({
             employeeId,
@@ -69,7 +76,7 @@ router.post('/addEmployee', async (req, res) => {
             customerSatisfaction,
             tasksCompleted,
             recentAchievement,
-            imageUrl,
+            imageUrl,  // Store the file URL
             password: hashedPassword,
         });
 
@@ -116,6 +123,7 @@ router.post('/addEmployee', async (req, res) => {
 });
 
 
+
 // Get employee spotlight (top performer)
 router.get('/spotlight', async (req, res) => {
     try {
@@ -141,24 +149,34 @@ router.get('/spotlight', async (req, res) => {
 });
 
 // Update employee details, including image URL
-router.put('/:employeeId', async (req, res) => {
+// Update employee details with profile picture upload handling
+router.put('/:employeeId', upload.single('profilePicture'), async (req, res) => {
     try {
         const { employeeId } = req.params;
-        const { firstName, lastName, email, username, department, imageUrl, customerSatisfaction, tasksCompleted, recentAchievement } = req.body;
+        const { firstName, lastName, email, username, department, customerSatisfaction, tasksCompleted, recentAchievement } = req.body;
+
+        // If an image is uploaded, save the file path
+        const imageUrl = req.file ? `/uploads/${req.file.filename}` : undefined;
+
+        const updatedFields = {
+            firstName, 
+            lastName, 
+            email, 
+            username, 
+            department, 
+            customerSatisfaction, 
+            tasksCompleted, 
+            recentAchievement
+        };
+
+        // Only update imageUrl if a new file is uploaded
+        if (imageUrl) {
+            updatedFields.imageUrl = imageUrl;
+        }
 
         const updatedEmployee = await employeeModel.findOneAndUpdate(
             { employeeId },
-            { 
-                firstName, 
-                lastName, 
-                email, 
-                username, 
-                department, 
-                imageUrl, 
-                customerSatisfaction, 
-                tasksCompleted, 
-                recentAchievement 
-            },
+            updatedFields,
             { new: true }
         );
 
@@ -182,6 +200,7 @@ router.put('/:employeeId', async (req, res) => {
         res.status(500).json({ message: 'Server error', error: err.message });
     }
 });
+
 
 // Delete employee and associated user
 router.post('/deleteEmployee', async (req, res) => {
