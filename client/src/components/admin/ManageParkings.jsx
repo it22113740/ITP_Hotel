@@ -128,7 +128,7 @@ function ManageParkings() {
             setEmployeesOnDutyToday(response.data);
             message.success("Fetched employees with today's duty.");
         } catch (error) {
-           
+           message.error("Failed to fetch employees with today's duty.");
         } finally {
             setLoading(false);
         }
@@ -149,7 +149,7 @@ function ManageParkings() {
         fetchBookings(); // Refresh the bookings list after deletion
         setIsDeleteModalVisible(false); // Close delete modal
     } catch (error) {
-        
+        message.error("Failed to delete booking.");
     }
 };
     const handleApproveDecline = async (parkingId, action) => {
@@ -161,7 +161,7 @@ function ManageParkings() {
             message.success(`Cancellation request ${action === 'approve' ? 'approved' : 'declined'} successfully.`);
             fetchBookings(); // Refresh the bookings list after approval or decline
         } catch (error) {
-            
+            message.error(`Failed to ${action === 'approve' ? 'approve' : 'decline'} cancellation request.`);
         }
     };
 
@@ -183,7 +183,7 @@ function ManageParkings() {
             setIsModalVisible(false);
             fetchBookings(); // Refresh the bookings list after update
         } catch (error) {
-           
+           message.error("Failed to update booking.");
         }
     };
 
