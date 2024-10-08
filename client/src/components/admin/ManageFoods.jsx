@@ -2,17 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { Table, Input, Button, message, Modal, Form, Select, InputNumber, Image, Dropdown, Menu, Checkbox } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, DownloadOutlined } from '@ant-design/icons';
 import axios from 'axios';
-import fileDownload from 'js-file-download'; // Import the file download package
+import fileDownload from 'js-file-download';
 
 const { Search } = Input;
 const { Option } = Select;
 
 const ManageCateringFoods = () => {
   const [foods, setFoods] = useState([]);
-  const [allFoods, setAllFoods] = useState([]); // Store the original list of foods
+  const [allFoods, setAllFoods] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
+  const [previewVisible, setPreviewVisible] = useState(false); // State for preview modal
   const [editingFood, setEditingFood] = useState(null);
+  const [previewFood, setPreviewFood] = useState(null); // State for preview food item
   const [selectedFields, setSelectedFields] = useState([
     'ItemID',
     'Name',
@@ -22,18 +24,19 @@ const ManageCateringFoods = () => {
     'Type',
     'ImageURL',
   ]);
+  const [chefMealModalVisible, setChefMealModalVisible] = useState(false); // State for chef meal modal
   const [form] = Form.useForm();
+  const [chefMealForm] = Form.useForm();
 
   useEffect(() => {
     fetchFoods();
   }, []);
 
-  // Fetch food items from the API
   const fetchFoods = async () => {
     try {
       const response = await axios.get('http://localhost:5000/api/catering/getItems');
       setFoods(response.data || []);
-      setAllFoods(response.data || []); // Store the full list of foods
+      setAllFoods(response.data || []);
     } catch (error) {
       message.error('Failed to fetch foods');
     } finally {
@@ -41,10 +44,25 @@ const ManageCateringFoods = () => {
     }
   };
 
-  // Handle search input
+  const showChefMealModal = () => {
+    chefMealForm.resetFields(); // Reset the form fields when the modal is opened
+    setChefMealModalVisible(true); // Show the chef meal modal
+  };
+
+  const handleAddChefMeal = async () => {
+    try {
+      const values = await chefMealForm.validateFields();
+      await axios.post('http://localhost:5000/api/cheff/addOrder', values);
+      message.success('Chef meal added successfully');
+      setChefMealModalVisible(false); // Close the modal on successful submission
+    } catch (error) {
+      message.error('Failed to add chef meal');
+    }
+  };
+
   const handleSearch = (value) => {
     if (value.trim() === '') {
-      setFoods(allFoods); // Reset to the full list when the search input is cleared
+      setFoods(allFoods);
     } else {
       const filteredFoods = allFoods.filter((food) =>
         food.name.toLowerCase().includes(value.toLowerCase()) ||
@@ -56,7 +74,6 @@ const ManageCateringFoods = () => {
     }
   };
 
-  // Show the modal for adding/editing food items
   const showModal = (food = null) => {
     setEditingFood(food);
     setModalVisible(true);
@@ -67,7 +84,11 @@ const ManageCateringFoods = () => {
     }
   };
 
-  // Handle submission of the form
+  const handlePreview = (food) => {
+    setPreviewFood(food);
+    setPreviewVisible(true); // Show preview modal
+  };
+
   const handleOk = () => {
     form.validateFields().then(async (values) => {
       try {
@@ -86,7 +107,6 @@ const ManageCateringFoods = () => {
     });
   };
 
-  // Handle deletion of a food item
   const handleDelete = async (itemId) => {
     Modal.confirm({
       title: 'Are you sure you want to delete this food item?',
@@ -102,7 +122,7 @@ const ManageCateringFoods = () => {
     });
   };
 
-  // Export foods to CSV
+  // CSV Export Function
   const exportToCSV = () => {
     const csvData = foods.map((food) => {
       const item = {};
@@ -130,7 +150,7 @@ const ManageCateringFoods = () => {
             item[field] = food.type || '';
             break;
           default:
-            item[field] = ''; // Fallback for any unknown fields
+            item[field] = '';
         }
       });
       return item;
@@ -146,7 +166,7 @@ const ManageCateringFoods = () => {
     fileDownload(csvContent, 'catering_foods_report.csv');
   };
 
-  // Dropdown menu with checkboxes for selecting fields
+  // Dropdown menu with checkboxes
   const menu = (
     <Menu>
       {['ItemID', 'Name', 'Description', 'Price', 'Category', 'Type', 'ImageURL'].map((field) => (
@@ -168,7 +188,6 @@ const ManageCateringFoods = () => {
     </Menu>
   );
 
-  // Define columns for the table
   const columns = [
     {
       title: 'Image',
@@ -178,7 +197,7 @@ const ManageCateringFoods = () => {
         <Image 
           src={text} 
           alt="food" 
-          width={100}  
+          width={100} 
           height={100} 
         />
       ),
@@ -194,6 +213,7 @@ const ManageCateringFoods = () => {
       key: 'actions',
       render: (_, record) => (
         <>
+          <Button onClick={() => handlePreview(record)}>Preview</Button>
           <Button icon={<EditOutlined />} onClick={() => showModal(record)} />
           <Button icon={<DeleteOutlined />} onClick={() => handleDelete(record.itemId)} danger />
         </>
@@ -212,6 +232,9 @@ const ManageCateringFoods = () => {
           enterButton
         />
         <div>
+        <Button type="default" onClick={showChefMealModal} style={{ marginRight: 10 }}>
+            Request
+          </Button>
           <Dropdown overlay={menu} placement="bottomRight" trigger={['click']}>
             <Button type="default" style={{ marginRight: 10 }}>
               Select Fields
@@ -227,7 +250,7 @@ const ManageCateringFoods = () => {
           <Button
             type="primary"
             icon={<PlusOutlined />}
-            onClick={() => showModal(null)} // Show modal for adding new food item
+            onClick={() => showModal(null)}
             style={{ marginLeft: 10 }}
           >
             Add Food
@@ -241,6 +264,26 @@ const ManageCateringFoods = () => {
         loading={loading}
         pagination={{ pageSize: 10 }}
       />
+
+<Modal
+        title="Add Chef Meal"
+        visible={chefMealModalVisible}
+        onOk={handleAddChefMeal}
+        onCancel={() => setChefMealModalVisible(false)}
+      >
+        <Form form={chefMealForm} layout="vertical">
+          <Form.Item name="foodImageUrl" label="Food Image URL" rules={[{ required: true, message: 'Please enter the image URL' }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="foodName" label="Food Name" rules={[{ required: true, message: 'Please enter the food name' }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="foodQuantity" label="Quantity" rules={[{ required: true, message: 'Please enter the quantity', type: 'number', min: 1 }]}>
+            <InputNumber style={{ width: '100%' }} min={1} />
+          </Form.Item>
+        </Form>
+      </Modal>
+
       <Modal
         title={editingFood ? 'Edit Food Item' : 'Add New Food Item'}
         visible={modalVisible}
@@ -248,7 +291,7 @@ const ManageCateringFoods = () => {
         onCancel={() => setModalVisible(false)}
       >
         <Form form={form} layout="vertical">
-          <Form.Item name="imageUrl" label="Image URL" rules={[{ required: true }]}>
+          <Form.Item name="imageUrl" label="Image URL">
             <Input />
           </Form.Item>
           <Form.Item name="name" label="Name" rules={[{ required: true }]}>
@@ -262,20 +305,42 @@ const ManageCateringFoods = () => {
           </Form.Item>
           <Form.Item name="type" label="Type" rules={[{ required: true }]}>
             <Select>
-              <Option value="vegetable">Vegetable</Option>
-              <Option value="non-vegetable">Non-Vegetable</Option>
-              <Option value="drink">Drink</Option>
+              <Option value="vegi">Veg</Option>
+              <Option value="non-vegi">Non-Veg</Option>
             </Select>
           </Form.Item>
           <Form.Item name="category" label="Category" rules={[{ required: true }]}>
-            <Select>
-              <Option value="starters">Starters</Option>
-              <Option value="main course">Main Course</Option>
-              <Option value="desserts">Desserts</Option>
-              <Option value="beverages">Beverages</Option>
+             <Select>
+              <Option value="breakfast">Breakfast</Option>
+              <Option value="lunch">Lunch</Option>
+              <Option value="dinner">Dinner</Option>
             </Select>
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* Preview Modal */}
+      <Modal
+        title="Food Item Preview"
+        visible={previewVisible}
+        onOk={() => setPreviewVisible(false)}
+        onCancel={() => setPreviewVisible(false)}
+        footer={[
+          <Button key="back" onClick={() => setPreviewVisible(false)}>
+            Close
+          </Button>,
+        ]}
+      >
+        {previewFood && (
+          <div>
+            <Image src={previewFood.imageUrl} alt={previewFood.name} width={200} />
+            <h3>{previewFood.name}</h3>
+            <p><strong>Description:</strong> {previewFood.description}</p>
+            <p><strong>Price:</strong> ${previewFood.price.toFixed(2)}</p>
+            <p><strong>Category:</strong> {previewFood.category}</p>
+            <p><strong>Type:</strong> {previewFood.type}</p>
+          </div>
+        )}
       </Modal>
     </div>
   );

@@ -126,6 +126,56 @@ class EmailService {
             console.error("Failed to send welcome email:", error);
         }
     }
+    static async sendFoodReminderEmail(userEmail, food) {
+        try {
+            const logoUrl = "https://i.ibb.co/1Kp8CXg/6th-gear-Logo.png";
+            const foodImageUrl = food.imageUrl; // Ensure the food object has an imageUrl property
+           
+
+            const mailOptions = {
+                from: `"Food Reminder" <${process.env.GMAIL_EMAIL}>`,
+                to: userEmail,
+                subject: `Your Food is Ready!`,
+                html: `
+                    <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f9f9f9; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+                        <div style="background-color: #ffffff; padding: 30px; border-radius: 10px;">
+                            <div style="text-align: center; margin-bottom: 20px;">
+                                <img src="${logoUrl}" alt="Sixth Gear Logo" style="max-width: 150px;">
+                            </div>
+                            <h2 style="color: #333333; text-align: center;">Food Preparation Complete!</h2>
+                            <p style="font-size: 18px; color: #555555; line-height: 1.6; text-align: center;">
+                                Hello,
+                            </p>
+                            <p style="font-size: 18px; color: #555555; line-height: 1.6; text-align: center;">
+                                We are pleased to inform you that your food preparation is done! 
+                                You can now collect your food.
+                            </p>
+                            <div style="text-align: center; margin: 20px 0;">
+                                <img src="${foodImageUrl}" alt="${food.name}" style="max-width: 100%; border-radius: 10px;">
+                            </div>
+                            <h3 style="font-size: 22px; margin: 20px 0 10px 0; color: #333;">Your Food Order:</h3>
+                            <p style="font-size: 18px; margin: 0;">
+                                <strong>${food.name}</strong>
+                            </p>
+                            <p style="font-size: 16px; margin-top: 20px;">
+                                Thank you for choosing us! If you have any questions or feedback, please let us know.
+                            </p>
+                            <p style="font-size: 16px; color: #888888; text-align: center; margin-top: 40px;">
+                                Best regards,<br>
+                                The Kitchen Team at Sixth Gear
+                            </p>
+                        </div>
+                    </div>
+                `
+            };
+
+            const info = await transporter.sendMail(mailOptions);
+            console.log("Food reminder email sent: ", info.response);
+        } catch (error) {
+            console.error("Failed to send food reminder email:", error);
+        }
+    }
 }
 
+// Export EmailService class for use in other modules
 module.exports = EmailService;
