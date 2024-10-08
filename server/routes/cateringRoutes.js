@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
-
+const multer = require('multer');
+const upload = require('../utils/upload'); // Adjust path as necessary
 const cateringModel = require('../models/Catering');
 
 // Function to generate a unique item ID
@@ -11,12 +12,12 @@ async function generateUniqueItemId() {
     while (!unique) {
         const randomNumber = Math.floor(1000000000 + Math.random() * 9000000000);
         itemId = `I${randomNumber}`;
-        
+
         const existingItem = await cateringModel.findOne({ itemId });
         if (!existingItem) {
             unique = true;
         }
-    } 
+    }
     
     return itemId;
 }
@@ -31,48 +32,60 @@ router.get('/getItems', async (req, res) => {
     }
 });
 
-// Route to add a new food item
-router.post('/addItem', async (req, res) => {
+// Route to add a new food item with image upload
+router.post('/addItem', upload.single('image'), async (req, res) => {
     try {
-      const { name, description, price, category, type, imageUrl } = req.body;
-      const itemId = await generateUniqueItemId();
-  
-      console.log('Generated itemId:', itemId); // Log generated ID
-  
-      const newItem = new cateringModel({
-        imageUrl,
-        itemId,
-        name,
-        description,
-        price,
-        category,
-        type,
-      });
-  
-      await newItem.save();
-  
-      res.status(201).json(newItem);
+        const { name, description, price, category, type } = req.body;
+        const itemId = await generateUniqueItemId();
+        
+        // Store only the relative path for the image URL
+        const imageUrl = req.file ? `/uploads/${req.file.filename}` : ''; // Only keep the relative path
+
+        console.log('Generated itemId:', itemId); // Log generated ID
+
+        const newItem = new cateringModel({
+            imageUrl,
+            itemId,
+            name,
+            description,
+            price,
+            category,
+            type,
+        });
+
+        await newItem.save();
+
+        res.status(201).json(newItem);
     } catch (err) {
-      console.error("Error adding item:", err); // Log any errors
-      res.status(500).send(err);
+        console.error("Error adding item:", err); // Log any errors
+        res.status(500).send(err);
     }
-  });
-  
+});
 
 // Route to update a food item
-router.post('/updateItem', async (req, res) => {
+router.post('/updateItem', upload.single('image'), async (req, res) => {
     try {
-        const { itemId, name, description, price, category, type, imageUrl } = req.body;
-        
+        const { itemId, name, description, price, category, type } = req.body;
+
         // Validation to check if itemId is provided
         if (!itemId) {
             return res.status(400).send('itemId is required');
         }
 
+        // If a new image is uploaded, update the imageUrl
+        const imageUrl = req.file ? `/uploads/${req.file.filename}` : undefined;
+
         // Find and update the item by itemId
         const updatedItem = await cateringModel.findOneAndUpdate(
             { itemId },
-            { name, description, price, category, type ,imageUrl },
+            {
+                name,
+                description,
+                price,
+                category,
+                type,
+                ...(imageUrl && { imageUrl }) // Update imageUrl only if a new image is uploaded
+            },
             { new: true }
         );
 
@@ -85,7 +98,6 @@ router.post('/updateItem', async (req, res) => {
         res.status(500).send(err);
     }
 });
-
 
 // Route to delete a food item
 router.post('/deleteItem', async (req, res) => {
@@ -103,7 +115,5 @@ router.post('/deleteItem', async (req, res) => {
         res.status(500).send(err);
     }
 });
-
-
 
 module.exports = router;
