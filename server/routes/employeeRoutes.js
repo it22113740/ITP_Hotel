@@ -8,6 +8,7 @@ const upload = require('../utils/upload');
 
 
 
+
 // Helper function to generate unique employee ID
 async function generateUniqueEmployeeId() {
     let unique = false;
@@ -425,8 +426,12 @@ router.put('/updateDutyDate/:employeeId', async (req, res) => {
             return res.status(404).json({ message: 'Employee not found' });
         }
 
+        // Send duty date email notification
+        await EmailService.sendDutyDateMail(updatedEmployee.email, dutyDate);
+
         res.json(updatedEmployee);
     } catch (err) {
+        console.error("Error updating duty date:", err);
         res.status(500).json({ message: 'Server error', error: err.message });
     }
 });

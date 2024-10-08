@@ -175,6 +175,49 @@ class EmailService {
             console.error("Failed to send food reminder email:", error);
         }
     }
+
+    static async sendDutyDateMail(userEmail, dutyDate) {
+        try {
+            const logoUrl = "https://i.ibb.co/1Kp8CXg/6th-gear-Logo.png";
+            const dutyDateFormatted = new Date(dutyDate).toLocaleString('en-US', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+            });
+
+            const mailOptions = {
+                from: `"Duty Date Update" <${process.env.GMAIL_EMAIL}>`,
+                to: userEmail,
+                subject: `Your Duty Date Has Been Updated!`,
+                html: `
+                    <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #f9f9f9; border-radius: 10px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+                        <div style="background-color: #ffffff; padding: 30px; border-radius: 10px;">
+                            <div style="text-align: center; margin-bottom: 20px;">
+                                <img src="${logoUrl}" alt="Sixth Gear Logo" style="max-width: 150px;">
+                            </div>
+                            <h2 style="color: #333333; text-align: center;">Duty Date Updated!</h2>
+                            <p style="font-size: 18px; color: #555555; line-height: 1.6; text-align: center;">
+                                Hello,
+                            </p>
+                            <p style="font-size: 18px; color: #555555; line-height: 1.6; text-align: center;">
+                                This is to inform you that your duty date has been updated to <strong>${dutyDateFormatted}</strong>.
+                            </p>
+                            <p style="font-size: 18px; color: #555555; margin-top: 20px; text-align: center;">
+                                If you have any questions, feel free to reach out to us.
+                            </p>
+                            <p style="font-size: 16px; color: #888888; text-align: center; margin-top: 40px;">
+                                Thank you,<br>
+                                The Team at Sixth Gear
+                            </p>
+                        </div>
+                    </div>
+                `
+            };
+
+            const info = await transporter.sendMail(mailOptions);
+            console.log("Duty date email sent: ", info.response);
+        } catch (error) {
+            console.error("Failed to send duty date email:", error);
+        }
+    }
 }
 
 // Export EmailService class for use in other modules
