@@ -104,6 +104,7 @@ function Feedbacks() {
                 <Button type="primary" style={{ backgroundColor: '#25b05f'}} onClick={() => setVisibleAdd(true)}>
                     Add Feedback
                 </Button>
+                
             </div>
             <div className="feedback-list-pofile-6789">
                 {feedbacks.map((feedback) => (
@@ -288,6 +289,7 @@ const DeleteFeedbackModal = ({ visible, onCancel, onConfirm }) => (
     >
         <p>Are you sure you want to delete this feedback?</p>
     </Modal>
+    
 );
 
 
