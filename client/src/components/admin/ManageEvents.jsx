@@ -5,13 +5,13 @@ import { Icon } from '@iconify/react';
 import { DatePicker } from 'antd';
 import moment from 'moment';
 import { PrinterOutlined } from '@ant-design/icons';
-import { CSVLink } from "react-csv"; // Import CSVLink for CSV download
+import { CSVLink } from "react-csv";
 
 const { confirm } = Modal;
 
 const ManageEvents = () => {
     const [events, setEvents] = useState([]);
-    const [allEvents, setAllEvents] = useState([]); // State to hold all events for CSV download
+    const [allEvents, setAllEvents] = useState([]);
     const [pagination, setPagination] = useState({ current: 1, pageSize: 7, total: 0 });
     const [loading, setLoading] = useState(false);
     const [isModalVisible, setIsModalVisible] = useState(false);
@@ -23,10 +23,9 @@ const ManageEvents = () => {
 
     useEffect(() => {
         fetchEvents();
-        fetchAllEvents(); // Fetch all events for the CSV download
+        fetchAllEvents();
     }, [pagination.current, searchText]);
 
-    // Fetch paginated events for table view
     const fetchEvents = async () => {
         setLoading(true);
         try {
@@ -46,13 +45,12 @@ const ManageEvents = () => {
         }
     };
 
-    // Fetch all events for CSV download
     const fetchAllEvents = async () => {
         try {
             const { data } = await axios.get('/api/Event/getEvents', {
-                params: { page: 1, limit: 1000, search: searchText }, // Request all events (adjust limit if needed)
+                params: { page: 1, limit: 1000, search: searchText },
             });
-            setAllEvents(data.events); // Save all events for CSV download
+            setAllEvents(data.events);
         } catch (error) {
             message.error("Error fetching all events");
         }
@@ -111,14 +109,25 @@ const ManageEvents = () => {
             }
             setIsModalVisible(false);
             fetchEvents();
-            fetchAllEvents(); // Refresh all events list after adding/editing an event
+            fetchAllEvents();
         } catch (error) {
             message.error(isEditMode ? 'Error updating event' : 'Error adding event');
         }
     };
 
     const columns = [
-        { title: 'Event ID', dataIndex: 'eventId', key: 'eventId' },
+        {
+            title: 'Image', // New Image column
+            key: 'image',
+            render: (text, record) => (
+                <img src={record.baseImage} alt={record.eventName} style={{ width: 50, height: 50, borderRadius: 5 }} />
+            ),
+        },
+        {
+            title: 'Event No',
+            key: 'index',
+            render: (text, record, index) => (pagination.current - 1) * pagination.pageSize + index + 1,
+        },
         { title: 'Event Name', dataIndex: 'eventName', key: 'eventName' },
         { title: 'Event Type', dataIndex: 'eventType', key: 'eventType' },
         { title: 'Price', dataIndex: 'price', key: 'price' },
@@ -147,7 +156,6 @@ const ManageEvents = () => {
         },
     ];
 
-    // CSV Headers and CSV Data
     const csvHeaders = [
         { label: "Event ID", key: "eventId" },
         { label: "Event Name", key: "eventName" },
@@ -155,6 +163,7 @@ const ManageEvents = () => {
         { label: "Price", key: "price" },
         { label: "Description", key: "description" },
     ];
+
 
     const handleSearch = (e) => {
         setSearchText(e.target.value);
@@ -167,9 +176,8 @@ const ManageEvents = () => {
                     <Input placeholder="Search events" value={searchText} onChange={handleSearch} className="search-bar-eventmanage" />
                     
                     <div className="Event_button_group"> 
-                        {/* CSV Download Button */}
                         <CSVLink
-                            data={allEvents} // Use allEvents instead of events for the full list
+                            data={allEvents}
                             headers={csvHeaders}
                             filename={"events_report.csv"}
                             className="csv_button_event"
