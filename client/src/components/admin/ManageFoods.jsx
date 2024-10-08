@@ -12,9 +12,9 @@ const ManageCateringFoods = () => {
   const [allFoods, setAllFoods] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
-  const [previewVisible, setPreviewVisible] = useState(false); // State for preview modal
+  const [previewVisible, setPreviewVisible] = useState(false);
   const [editingFood, setEditingFood] = useState(null);
-  const [previewFood, setPreviewFood] = useState(null); // State for preview food item
+  const [previewFood, setPreviewFood] = useState(null);
   const [selectedFields, setSelectedFields] = useState([
     'ItemID',
     'Name',
@@ -24,9 +24,10 @@ const ManageCateringFoods = () => {
     'Type',
     'ImageURL',
   ]);
-  const [chefMealModalVisible, setChefMealModalVisible] = useState(false); // State for chef meal modal
+  const [chefMealModalVisible, setChefMealModalVisible] = useState(false);
   const [form] = Form.useForm();
   const [chefMealForm] = Form.useForm();
+  const [file, setFile] = useState(null);
 
   useEffect(() => {
     fetchFoods();
@@ -45,8 +46,8 @@ const ManageCateringFoods = () => {
   };
 
   const showChefMealModal = () => {
-    chefMealForm.resetFields(); // Reset the form fields when the modal is opened
-    setChefMealModalVisible(true); // Show the chef meal modal
+    chefMealForm.resetFields();
+    setChefMealModalVisible(true);
   };
 
   const handleAddChefMeal = async () => {
@@ -54,7 +55,7 @@ const ManageCateringFoods = () => {
       const values = await chefMealForm.validateFields();
       await axios.post('http://localhost:5000/api/cheff/addOrder', values);
       message.success('Chef meal added successfully');
-      setChefMealModalVisible(false); // Close the modal on successful submission
+      setChefMealModalVisible(false);
     } catch (error) {
       message.error('Failed to add chef meal');
     }
@@ -86,17 +87,30 @@ const ManageCateringFoods = () => {
 
   const handlePreview = (food) => {
     setPreviewFood(food);
-    setPreviewVisible(true); // Show preview modal
+    setPreviewVisible(true);
+  };
+
+  const handleFileChange = (e) => {
+    const { files } = e.target;
+    if (files && files.length > 0) {
+      setFile(files[0]);
+    }
   };
 
   const handleOk = () => {
     form.validateFields().then(async (values) => {
       try {
+        const formData = new FormData();
+        formData.append('image', file);
+        Object.keys(values).forEach(key => {
+          formData.append(key, values[key]);
+        });
+
         if (editingFood) {
-          await axios.post('http://localhost:5000/api/catering/updateItem', { ...values, itemId: editingFood.itemId });
+          await axios.post('http://localhost:5000/api/catering/updateItem', { ...formData, itemId: editingFood.itemId });
           message.success('Food item updated successfully');
         } else {
-          await axios.post('http://localhost:5000/api/catering/addItem', values);
+          await axios.post('http://localhost:5000/api/catering/addItem', formData);
           message.success('Food item added successfully');
         }
         setModalVisible(false);
@@ -122,7 +136,6 @@ const ManageCateringFoods = () => {
     });
   };
 
-  // CSV Export Function
   const exportToCSV = () => {
     const csvData = foods.map((food) => {
       const item = {};
@@ -166,7 +179,6 @@ const ManageCateringFoods = () => {
     fileDownload(csvContent, 'catering_foods_report.csv');
   };
 
-  // Dropdown menu with checkboxes
   const menu = (
     <Menu>
       {['ItemID', 'Name', 'Description', 'Price', 'Category', 'Type', 'ImageURL'].map((field) => (
@@ -232,7 +244,7 @@ const ManageCateringFoods = () => {
           enterButton
         />
         <div>
-        <Button type="default" onClick={showChefMealModal} style={{ marginRight: 10 }}>
+          <Button type="default" onClick={showChefMealModal} style={{ marginRight: 10 }}>
             Request
           </Button>
           <Dropdown overlay={menu} placement="bottomRight" trigger={['click']}>
@@ -265,7 +277,7 @@ const ManageCateringFoods = () => {
         pagination={{ pageSize: 10 }}
       />
 
-<Modal
+      <Modal
         title="Add Chef Meal"
         visible={chefMealModalVisible}
         onOk={handleAddChefMeal}
@@ -291,8 +303,8 @@ const ManageCateringFoods = () => {
         onCancel={() => setModalVisible(false)}
       >
         <Form form={form} layout="vertical">
-          <Form.Item name="imageUrl" label="Image URL">
-            <Input />
+          <Form.Item name="imageUrl" label="Image" valuePropName="file">
+            <Input type="file" onChange={handleFileChange} />
           </Form.Item>
           <Form.Item name="name" label="Name" rules={[{ required: true }]}>
             <Input />
@@ -310,7 +322,7 @@ const ManageCateringFoods = () => {
             </Select>
           </Form.Item>
           <Form.Item name="category" label="Category" rules={[{ required: true }]}>
-             <Select>
+            <Select>
               <Option value="breakfast">Breakfast</Option>
               <Option value="lunch">Lunch</Option>
               <Option value="dinner">Dinner</Option>
@@ -319,7 +331,6 @@ const ManageCateringFoods = () => {
         </Form>
       </Modal>
 
-      {/* Preview Modal */}
       <Modal
         title="Food Item Preview"
         visible={previewVisible}
