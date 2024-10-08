@@ -136,7 +136,7 @@ const FeedbackPage = () => {
                 <Button type="primary" style={{ backgroundColor: '#25b05f', marginLeft: '900px'}} onClick={() => setVisibleAdd(true)}>
                     Add Feedback 
                 </Button>
-                <Button type="primary" style={{ backgroundColor: '#25b05f' }} onClick={() => setVisibleAdd(true)}>
+                <Button type="primary" style={{ backgroundColor: '#25b05f' }} onClick={() => window.location.href =" http://localhost:3002"}>
                   Chatbot
                 </Button>
                 
