@@ -381,19 +381,34 @@ function ManageParkings() {
         </Select>
 
         
-
+        
         {selectedDate && selectedEmployeeData && (
-            <div style={{ marginTop: '20px' }}>
-                
-                <Avatar
-                    size={100}
-                    src={selectedEmployeeData.imageUrl}
-                    icon={<UserOutlined />}
-                />
-                <h3>{selectedEmployeeData.name}</h3>
-                
-            </div>
-        )}
+    <div style={{
+        marginTop: '20px',
+        backgroundColor: '#fff',
+        padding: '20px',
+        borderRadius: '8px',
+        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',  // Gray shadow
+        display: 'flex',
+        alignItems: 'center',
+        flexDirection: 'column',
+        marginBottom: '20px',
+            
+        textAlign: 'center',
+        maxWidth: '300px',
+        margin: 'auto'  // Center the box
+    }}>
+        <Avatar
+            size={100}
+            src={selectedEmployeeData.imageUrl}
+            icon={<UserOutlined />}
+        />
+        <h3 style={{ marginTop: '15px' }}>{selectedEmployeeData.name}</h3>
+    </div>
+)}
+
+       
+
             </div>
 
             
