@@ -35,7 +35,8 @@ import {
   SearchOutlined,
   DownloadOutlined,
   CheckOutlined,
-  CloseOutlined
+  CloseOutlined,
+  EyeOutlined
 } from "@ant-design/icons";
 
 
@@ -52,6 +53,13 @@ function ManageEmployees() {
   const [form] = Form.useForm();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
+  const [isSalaryModalVisible, setIsSalaryModalVisible] = useState(false);
+const [selectedEmployee, setSelectedEmployee] = useState(null);
+const [salaryForm] = Form.useForm();
+const [salaryDetails, setSalaryDetails] = useState(null);
+const [isSalaryDetailsModalVisible, setIsSalaryDetailsModalVisible] = useState(false);
+const [isViewModalVisible, setIsViewModalVisible] = useState(false);
+  const [viewEmployee, setViewEmployee] = useState(null);
 
   // State to manage selected fields for PDF report
   const [selectedFields, setSelectedFields] = useState([
@@ -82,6 +90,30 @@ function ManageEmployees() {
       setSpotlightLoading(false);
     }
   };
+  const showAddSalaryModal = (employee) => {
+    setSelectedEmployee(employee);
+    salaryForm.resetFields(); // Reset fields in case of re-opening modal
+    setIsSalaryModalVisible(true);
+  };
+
+  const showViewEmployeeModal = (employee) => {
+    setViewEmployee(employee);
+    setIsViewModalVisible(true);
+  };
+
+  const handleAddSalary = async (values) => {
+    try {
+      await axios.post("http://localhost:5000/api/employee/addSalary", {
+        employeeId: selectedEmployee.employeeId,
+        ...values, // This will include amount, bank, bankBranchNumber, and accountNumber
+      });
+      message.success("Salary added successfully");
+      setIsSalaryModalVisible(false);
+      fetchEmployees(); // Refresh employee data
+    } catch (error) {
+      message.error("Failed to add salary");
+    }
+  };
 
   const fetchEmployees = async () => {
     setLoading(true);
@@ -98,6 +130,16 @@ function ManageEmployees() {
       message.error("Failed to fetch employees and leaves");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleViewSalary = async (employeeId) => {
+    try {
+      const response = await axios.get(`http://localhost:5000/api/employee/viewSalary/${employeeId}`);
+      setSalaryDetails(response.data.salary); // Assuming salary data is returned directly
+      setIsSalaryDetailsModalVisible(true);
+    } catch (error) {
+      message.error("Failed to fetch salary details");
     }
   };
 
@@ -259,27 +301,6 @@ function ManageEmployees() {
       render: (tasks) => <Text strong>{tasks}</Text>,
     },
     {
-      title: "Actions",
-      key: "actions",
-      render: (_, employee) => (
-        <Space>
-          <Tooltip title="Edit">
-            <Button icon={<EditOutlined />} onClick={() => showModal(employee)} />
-          </Tooltip>
-          <Tooltip title="Delete">
-            <Popconfirm
-              title="Are you sure you want to delete this employee?"
-              onConfirm={() => handleDelete(employee.employeeId)}
-              okText="Yes"
-              cancelText="No"
-            >
-              <Button icon={<DeleteOutlined />} danger />
-            </Popconfirm>
-          </Tooltip>
-        </Space>
-      ),
-    },
-    {
       title: "Leave Action",
       key: "leaveAction",
       render: (_, employee) => {
@@ -310,7 +331,57 @@ function ManageEmployees() {
         return <Tag color="green">No Pending Leave</Tag>;
       },
     },
+    {
+      title: "Salary Actions",
+      key: "salaryActions",
+      render: (_, employee) => (
+        <Space>
+          <Tooltip title="Add Salary">
+            <Button
+              type="primary"
+              onClick={() => showAddSalaryModal(employee)}
+            >
+              Add Salary
+            </Button>
+          </Tooltip>
+          <Tooltip title="View Salary">
+            <Button
+              icon={<EyeOutlined />}
+              onClick={() => handleViewSalary(employee.employeeId)}
+            />
+          </Tooltip>
+        </Space>
+      ),
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      render: (_, employee) => (
+        <Space>
+          <Tooltip title="View Employee Details">
+            <Button
+              icon={<EyeOutlined />}
+              onClick={() => showViewEmployeeModal(employee)} // Show view modal on click
+            />
+          </Tooltip>
+          <Tooltip title="Edit">
+            <Button icon={<EditOutlined />} onClick={() => showModal(employee)} />
+          </Tooltip>
+          <Tooltip title="Delete">
+            <Popconfirm
+              title="Are you sure you want to delete this employee?"
+              onConfirm={() => handleDelete(employee.employeeId)}
+              okText="Yes"
+              cancelText="No"
+            >
+              <Button icon={<DeleteOutlined />} danger />
+            </Popconfirm>
+          </Tooltip>
+        </Space>
+      ),
+    },
   ];
+  
 
   const EmployeeSpotlight = () => {
     if (spotlightLoading) {
@@ -388,14 +459,21 @@ function ManageEmployees() {
         }
       >
         <div style={{ marginTop: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-  <div>
-    <Title level={5}>Select Fields for PDF Report</Title>
-    <Checkbox.Group
-      options={availableFields}
-      value={selectedFields}
-      onChange={handleFieldChange}
-    />
-  </div>
+        <div style={{ marginLeft: '60%', width: 'calc(100% - 10px)', marginRight: '10px' }}>
+  <Select
+    mode="multiple" // Use multiple selection
+    placeholder="Select fields"
+    value={selectedFields}
+    onChange={handleFieldChange}
+    style={{ width: '100%' }} // Adjust the width to fill the parent div
+  >
+    {availableFields.map((field) => (
+      <Select.Option key={field.value} value={field.value}>
+        {field.label}
+      </Select.Option>
+    ))}
+  </Select>
+</div>
   <Button type="primary" icon={<DownloadOutlined />} onClick={downloadPDF}>
     Download PDF
   </Button>
@@ -510,6 +588,95 @@ function ManageEmployees() {
           </Form.Item>
         </Form>
       </Modal>
+      <Modal
+  title="Add Salary"
+  visible={isSalaryModalVisible}
+  onCancel={() => setIsSalaryModalVisible(false)}
+  footer={null}
+>
+  <Form form={salaryForm} onFinish={handleAddSalary} layout="vertical">
+    <Form.Item
+      name="amount"
+      label="Salary Amount"
+      //rules={[{ required: true, type: "number", min: 0 }]}
+    >
+      <Input type="number" />
+    </Form.Item>
+    <Form.Item
+      name="bank"
+      label="Bank Name"
+      rules={[{ required: true }]}
+    >
+      <Input />
+    </Form.Item>
+    <Form.Item
+      name="bankBranchNumber"
+      label="Bank Branch Number"
+      rules={[{ required: true }]}
+    >
+      <Input />
+    </Form.Item>
+    <Form.Item
+      name="accountNumber"
+      label="Account Number"
+      rules={[{ required: true }]}
+    >
+      <Input />
+    </Form.Item>
+    <Form.Item>
+      <Button type="primary" htmlType="submit" block>
+        Add Salary
+      </Button>
+    </Form.Item>
+  </Form>
+</Modal>
+
+<Modal
+  title="Salary Details"
+  visible={isSalaryDetailsModalVisible}
+  onCancel={() => setIsSalaryDetailsModalVisible(false)}
+  footer={null}
+>
+  {salaryDetails ? (
+    <div>
+      <p><strong>Salary Amount:</strong> {salaryDetails.amount}</p>
+      <p><strong>Bank Name:</strong> {salaryDetails.bank}</p>
+      <p><strong>Bank Branch Number:</strong> {salaryDetails.bankBranchNumber}</p>
+      <p><strong>Account Number:</strong> {salaryDetails.accountNumber}</p>
+    </div>
+  ) : (
+    <Spin />
+  )}
+</Modal>
+<Modal
+  title="Employee Details"
+  visible={isViewModalVisible}
+  onCancel={() => setIsViewModalVisible(false)}
+  footer={null}
+>
+  {viewEmployee ? (
+    <Row gutter={16}>
+      <Col span={8}>
+        <Avatar
+          size={100}
+          src={viewEmployee.imageUrl || undefined}
+          icon={<UserOutlined />}
+        />
+      </Col>
+      <Col span={16}>
+        <Title level={4}>{`${viewEmployee.firstName} ${viewEmployee.lastName}`}</Title>
+        <p><strong>Email:</strong> {viewEmployee.email}</p>
+        <p><strong>Username:</strong> {viewEmployee.username}</p>
+        <p><strong>Department:</strong> {viewEmployee.department}</p>
+        <p><strong>Customer Satisfaction:</strong> {viewEmployee.customerSatisfaction}/5</p>
+        <p><strong>Tasks Completed:</strong> {viewEmployee.tasksCompleted}</p>
+        <p><strong>Recent Achievement:</strong> {viewEmployee.recentAchievement}</p>
+      </Col>
+    </Row>
+  ) : (
+    <Spin />
+  )}
+</Modal>
       
     </div>
   );
