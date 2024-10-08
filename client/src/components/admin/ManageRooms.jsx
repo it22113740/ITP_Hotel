@@ -10,7 +10,9 @@ import {
         Select,
         InputNumber,
         Card,
+        DatePicker,Avatar
 } from "antd";
+
 import { Icon } from "@iconify/react";
 import axios from "axios";
 import {
@@ -24,6 +26,9 @@ import {
         Tooltip as RechartsTooltip,
         ResponsiveContainer,
 } from "recharts";
+import {
+        UserOutlined
+      } from "@ant-design/icons";
 import { CSVLink } from "react-csv"; // Import CSVLink
 
 const ManageRooms = () => {
@@ -38,6 +43,13 @@ const ManageRooms = () => {
 
         const [form] = Form.useForm(); // Form instance for add room
         const [updateForm] = Form.useForm(); // Form instance for update room
+
+
+        const [selectedSecurityEmployee, setSelectedSecurityEmployee] = useState(null);
+        const [employees, setEmployees] = useState([]);
+        const [selectedEmployeeData, setSelectedEmployeeData] = useState(null);
+        
+        const [selectedDate, setSelectedDate] = useState("");
 
         const OPTIONS = [
                 "WiFi",
@@ -84,6 +96,38 @@ const ManageRooms = () => {
                 updateForm.resetFields();
                 setEditingRoom(null);
         };
+
+
+
+        const fetchEmployeesByDepartment = async (department) => {
+                try {
+                    const response = await axios.get(`/api/employee/getEmployeesByDepartment/${department}`);
+                    setEmployees(response.data);
+                } catch (error) {
+                    message.error(error.response?.data?.message || "Failed to fetch employees.");
+                }
+            };
+        
+            const handleShowSecurityEmployees = () => {
+                fetchEmployeesByDepartment("Security");
+            };
+
+
+
+
+
+
+            const handleEmployeeSelection = (employeeId) => {
+                const selectedEmployee = employees.find(emp => emp._id === employeeId);
+                setSelectedSecurityEmployee(employeeId);
+                setSelectedEmployeeData({
+                    name: selectedEmployee.firstName,
+                    imageUrl: selectedEmployee.profilePictureUrl || null,
+                });
+            };
+
+
+        
 
         // Fetch rooms from the API
         const fetchRooms = async () => {
@@ -306,6 +350,10 @@ const ManageRooms = () => {
                                                         </CSVLink>
                                                 </button>
                                         </div>
+
+
+                                        
+
                                         <Modal
                                                 title="Add Room"
                                                 open={isModalOpen}
@@ -486,6 +534,60 @@ const ManageRooms = () => {
                                                 </Form>
                                         </Modal>
                                 </div>
+
+
+
+
+
+
+
+
+
+
+
+                                <div>
+            <DatePicker
+            onChange={(date) => setSelectedDate(date)}
+            value={selectedDate}
+            style={{ width: 200, marginRight: '10px' }}
+            placeholder="Select Date"
+        />
+        
+        {/* Security employee selection */}
+        <Select
+            style={{ width: 200 }}
+            placeholder="Select Security Employee"
+            onChange={handleEmployeeSelection}
+            onFocus={handleShowSecurityEmployees}
+        >
+            {employees.map(employee => (
+                <Select.Option key={employee._id} value={employee._id}>
+                    {employee.firstName}
+                </Select.Option>
+            ))}
+
+            
+        </Select>
+        
+        {selectedDate && selectedEmployeeData && (
+            <div style={{ marginTop: '20px' }}>
+                <Avatar
+                    size={100}
+                    src={selectedEmployeeData.imageUrl}
+                    icon={<UserOutlined />}
+                />
+                <h3>{selectedEmployeeData.name}</h3>
+            </div>
+        )}
+            </div>
+
+
+
+
+
+
+
+
                                 {/* Room Analytics Section */}
                                 <div className="Type_Distribution">
                                         <RoomAnalyticsDashboard />
