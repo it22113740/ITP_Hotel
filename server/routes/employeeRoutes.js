@@ -431,6 +431,30 @@ router.put('/updateDutyDate/:employeeId', async (req, res) => {
     }
 });
 
+router.get('/getTodayDutyEmployees', async (req, res) => {
+    try {
+        const today = new Date();
+        // Remove the time part from the current date for an accurate date comparison
+        const todayStart = new Date(today.setHours(0, 0, 0, 0));
+        const todayEnd = new Date(today.setHours(23, 59, 59, 999));
+
+        const employees = await employeeModel.find({
+            dutyDate: {
+                $gte: todayStart,
+                $lte: todayEnd
+            }
+        });
+
+        if (employees.length === 0) {
+            return res.status(404).json({ message: 'No employees found with duty today' });
+        }
+
+        res.status(200).json(employees);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error', error: err.message });
+    }
+});
+
 
 
 module.exports = router;
