@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcrypt');
 const User = require('../models/User');
+const upload = require('../utils/upload'); // Adjust the path as necessary
 
 // Function to generate a unique user ID
 const generateUserID = async () => {
@@ -22,7 +23,7 @@ const generateUserID = async () => {
 };
 
 // Signup Route
-router.post('/signup', async (req, res) => {
+router.post('/signup', upload.single('profilePic'), async (req, res) => {
     try {
         const { firstName, lastName, email, password, confirmPassword, username } = req.body;
 
@@ -52,6 +53,7 @@ router.post('/signup', async (req, res) => {
             email,
             password: hashedPassword,
             username,
+            profilePic: req.file ? `/uploads/${req.file.filename}` : null, // Store the path to the profile picture
         });
 
         const savedUser = await newUser.save();
@@ -65,6 +67,7 @@ router.post('/signup', async (req, res) => {
             email: savedUser.email,
             username: savedUser.username,
             userType: savedUser.userType,
+            profilePic: savedUser.profilePic, // Include the profilePic in the response
             createdAt: savedUser.createdAt,
             updatedAt: savedUser.updatedAt
         };
@@ -107,6 +110,7 @@ router.post('/login', async (req, res) => {
             email: user.email,
             username: user.username,
             userType: user.userType,
+            profilePic: user.profilePic, // Include profilePic in the response
             createdAt: user.createdAt,
             updatedAt: user.updatedAt
         };
@@ -120,13 +124,21 @@ router.post('/login', async (req, res) => {
 });
 
 // Update User Route
-router.post('/updateUser', async (req, res) => {
+router.post('/updateUser', upload.single('profilePic'), async (req, res) => {
     try {
         const { userID, firstName, lastName, email, username } = req.body;
 
+        // Create an update object
+        const updateData = { firstName, lastName, email, username };
+
+        // Check if a new profile picture was uploaded
+        if (req.file) {
+            updateData.profilePic = `/uploads/${req.file.filename}`; // Update the profilePic path
+        }
+
         const updatedUser = await User.findOneAndUpdate(
             { userID },
-            { firstName, lastName, email, username },
+            updateData,
             { new: true }
         );
 
@@ -143,6 +155,7 @@ router.post('/updateUser', async (req, res) => {
             email: updatedUser.email,
             username: updatedUser.username,
             userType: updatedUser.userType,
+            profilePic: updatedUser.profilePic, // Include updated profilePic
             createdAt: updatedUser.createdAt,
             updatedAt: updatedUser.updatedAt
         };
