@@ -153,6 +153,32 @@ function RoomViewPage() {
 
         if (!room) return <p>Loading...</p>;
 
+        //Date Validation
+        const onDatesChange = (dates) => {
+                if (dates && dates.length === 2) {
+                    const [checkIn, checkOut] = dates;
+        
+                    // Check if check-in date or check-out date is in the past
+                    if (checkIn.isBefore(moment(), 'day') || checkOut.isBefore(moment(), 'day')) {
+                        message.error("Check-in and Check-out dates must be in the future.");
+                        form.setFields([
+                            {
+                                name: 'dates',
+                                errors: ['Please select valid future dates for check-in and check-out.'],
+                            },
+                        ]);
+                    } else {
+                        // Clear the error if the dates are valid
+                        form.setFields([
+                            {
+                                name: 'dates',
+                                errors: [],
+                            },
+                        ]);
+                    }
+                }
+            };
+
         return (
                 <div className="room-details-page">
                         <div className="room-image">
@@ -326,32 +352,31 @@ function RoomViewPage() {
                                                         name="phone"
                                                         rules={[
                                                                 {
-                                                                        required: true,
-                                                                        message: "Please enter your phone number",
+                                                                required: true,
+                                                                message: "Please enter your phone number",
                                                                 },
                                                                 {
-                                                                        pattern: /^[0-9]+$/,
-                                                                        message: "Please enter a valid phone number",
+                                                                pattern: /^0[0-9]{9}$/, // Must start with '0' and be exactly 10 digits long
+                                                                message: "Please enter a valid phone number (must start with '0' and be 10 digits long)",
                                                                 },
                                                         ]}
-                                                >
+                                                        >
                                                         <Input />
-                                                </Form.Item>
+                                                        </Form.Item>
+
                                                 <Form.Item
                                                         label="Check-in & Check-out Dates"
                                                         name="dates"
                                                         rules={[
-                                                                {
-                                                                        required: true,
-                                                                        message: "Please select the check-in and check-out dates",
-                                                                },
+                                                        {
+                                                                required: true,
+                                                                message: "Please select the check-in and check-out dates",
+                                                        },
                                                         ]}
                                                 >
                                                         <DatePicker.RangePicker
-                                                                format="YYYY-MM-DD"
-                                                                onChange={
-                                                                        onDateChange
-                                                                }
+                                                        format="YYYY-MM-DD"
+                                                        onChange={onDatesChange}
                                                         />
                                                 </Form.Item>
                                         </Form>

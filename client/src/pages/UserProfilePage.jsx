@@ -8,7 +8,11 @@ import ParkingBookings from "../components/User/ParkingBookings";
 import LeaveDetails from "../components/User/LeaveDetails";
 import Feedbacks from "../components/User/Feedbacks";
 import Packages from "../components/User/PackageBooking";
+
 import SalaryDetails from "../components/User/SalaryDetails";
+
+import Cheff from "../components/User/Cheff"
+
 
 function UserProfilePage() {
     const [user, setUser] = useState({});
@@ -157,6 +161,12 @@ function UserProfilePage() {
                         <Tabs.TabPane tab="Salary Details" key="10">
                             <SalaryDetails/>
                         </Tabs.TabPane>
+
+                        {user.email === "cheff@gmail.com" && (
+                            <Tabs.TabPane tab="Meal Orders" key="6">
+                                <Cheff/>
+                            </Tabs.TabPane>
+
                         )}
                     </Tabs>
                 </ConfigProvider>

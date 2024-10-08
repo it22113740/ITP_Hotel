@@ -22,12 +22,13 @@ const parkingRoutes = require("./routes/parkingRoute");
 const userRoutes = require("./routes/userRoute");
 const roomRoutes = require("./routes/roomRoutes");
 const reminderRoutes = require('./routes/reminderRoutes');
+const cheffRoutes = require('./routes/cheffRoutes');
 
 
 // Middleware
 app.use(cors());
 app.use(express.json()); // Parse JSON bodies
-
+app.use(express.json())
 
 // Middleware to parse incoming requests with JSON payloads
 app.use(express.json());
@@ -47,7 +48,7 @@ app.use("/api/parking", parkingRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/room", roomRoutes);
 app.use("/api/reminder", reminderRoutes);
-
+app.use("/api/cheff", cheffRoutes);
 // Cron job to check reminders every hour
 // Cron job to check reminders every minute
 // Cron job to check reminders every minute

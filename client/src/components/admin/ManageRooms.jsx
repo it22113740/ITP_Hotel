@@ -51,6 +51,7 @@ const ManageRooms = () => {
         
         const [selectedDate, setSelectedDate] = useState("");
 
+
         const OPTIONS = [
                 "WiFi",
                 "Air Conditioning",
@@ -60,7 +61,8 @@ const ManageRooms = () => {
                 "Restaurant",
         ];
 
-        // CSV data
+
+            // CSV data
         const csvHeaders = [
                 { label: "Room Number", key: "roomNumber" },
                 { label: "Room Type", key: "roomType" },
@@ -113,10 +115,6 @@ const ManageRooms = () => {
             };
 
 
-
-
-
-
             const handleEmployeeSelection = (employeeId) => {
                 const selectedEmployee = employees.find(emp => emp._id === employeeId);
                 setSelectedSecurityEmployee(employeeId);
@@ -126,8 +124,6 @@ const ManageRooms = () => {
                 });
             };
 
-
-        
 
         // Fetch rooms from the API
         const fetchRooms = async () => {
@@ -351,10 +347,7 @@ const ManageRooms = () => {
                                                 </button>
                                         </div>
 
-
-                                        
-
-                                        <Modal
+                          <Modal
                                                 title="Add Room"
                                                 open={isModalOpen}
                                                 onOk={addRoom}
@@ -387,13 +380,18 @@ const ManageRooms = () => {
                                                                 name="roomType"
                                                                 rules={[
                                                                         {
-                                                                                required: true,
-                                                                                message: "Please enter the room type",
+                                                                        required: true,
+                                                                        message: "Please select a room type",
                                                                         },
                                                                 ]}
-                                                        >
-                                                                <Input placeholder="Enter room type" />
+                                                                >
+                                                                <Select placeholder="Select room type">
+                                                                        <Select.Option value="Luxury Room">Luxury Room</Select.Option>
+                                                                        <Select.Option value="Double Room">Double Room</Select.Option>
+                                                                        <Select.Option value="Single Room">Single Room</Select.Option>
+                                                                </Select>
                                                         </Form.Item>
+
                                                         <Form.Item
                                                                 label="Room Facilities"
                                                                 name="facilities"
@@ -536,16 +534,6 @@ const ManageRooms = () => {
                                 </div>
 
 
-
-
-
-
-
-
-
-
-
-                                <div>
             <DatePicker
             onChange={(date) => setSelectedDate(date)}
             value={selectedDate}
@@ -579,16 +567,7 @@ const ManageRooms = () => {
                 <h3>{selectedEmployeeData.name}</h3>
             </div>
         )}
-            </div>
 
-
-
-
-
-
-
-
-                                {/* Room Analytics Section */}
                                 <div className="Type_Distribution">
                                         <RoomAnalyticsDashboard />
                                 </div>
@@ -635,13 +614,18 @@ const ManageRooms = () => {
                                                         name="roomType"
                                                         rules={[
                                                                 {
-                                                                        required: true,
-                                                                        message: "Please enter the room type",
+                                                                required: true,
+                                                                message: "Please select a room type",
                                                                 },
                                                         ]}
-                                                >
-                                                        <Input placeholder="Enter room type" />
+                                                        >
+                                                        <Select placeholder="Select room type">
+                                                                <Select.Option value="Luxury Room">Luxury Room</Select.Option>
+                                                                <Select.Option value="Double Room">Double Room</Select.Option>
+                                                                <Select.Option value="Single Room">Single Room</Select.Option>
+                                                        </Select>
                                                 </Form.Item>
+
                                                 <Form.Item
                                                         label="Room Facilities"
                                                         name="facilities"
@@ -951,3 +935,5 @@ const RoomAnalyticsDashboard = () => {
 };
 
 export default ManageRooms;
+
+

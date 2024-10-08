@@ -1,30 +1,28 @@
 import React, { useEffect, useState } from "react";
-import { Table, Button, Select, Input } from "antd"; // Import Input for title searching
+import { Table, Button, Input } from "antd";
 import axios from "axios";
 import { CSVLink } from "react-csv";
 import { AiFillPrinter } from "react-icons/ai";
-
-const { Option } = Select; // For category selection
 
 function ManageFeedbacks() {
     const [feedbacks, setFeedbacks] = useState([]);
     const [loading, setLoading] = useState(false);
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);
-    const [allFeedbacks, setAllFeedbacks] = useState([]); // All feedbacks for CSV
-    const [selectedCategory, setSelectedCategory] = useState(""); // Selected category for filtering
-    const [searchTitle, setSearchTitle] = useState(""); // Search title for filtering
+    const [allFeedbacks, setAllFeedbacks] = useState([]);
+    const [searchTitle, setSearchTitle] = useState("");
+    const [selectedRowKeys, setSelectedRowKeys] = useState([]); // Store selected feedback IDs
     const limit = 7;
 
     useEffect(() => {
-        fetchFeedbacks(page, selectedCategory); // Fetch feedbacks with selected category
-        fetchAllFeedbacks(); // Fetch all feedbacks for CSV
-    }, [page, selectedCategory]);
+        fetchFeedbacks(page);
+        fetchAllFeedbacks();
+    }, [page]);
 
-    const fetchFeedbacks = async (page, category) => {
+    const fetchFeedbacks = async (page) => {
         setLoading(true);
         try {
-            const response = await axios.post("/api/feedback/getFeedback", { page, limit, category });
+            const response = await axios.post("/api/feedback/getFeedback", { page, limit });
             setFeedbacks(response.data.feedbacks);
             setTotal(response.data.total);
         } catch (error) {
@@ -34,11 +32,10 @@ function ManageFeedbacks() {
         }
     };
 
-    // Fetch all feedbacks for CSV export
     const fetchAllFeedbacks = async () => {
         try {
             const response = await axios.post("/api/feedback/getFeedback", { page: 1, limit: 0 });
-            setAllFeedbacks(response.data.feedbacks); // Store all feedbacks for CSV download
+            setAllFeedbacks(response.data.feedbacks);
         } catch (error) {
             console.error("Error fetching all feedbacks:", error);
         }
@@ -49,9 +46,7 @@ function ManageFeedbacks() {
             title: "Feedback ID",
             dataIndex: "_id",
             key: "feedbackId",
-            render: (text, record, index) => (
-                String.fromCharCode(65 + index) // Convert index to letters A, B, C, etc.
-            )
+            render: (text, record, index) => String.fromCharCode(65 + index),
         },
         {
             title: "Title",
@@ -82,9 +77,7 @@ function ManageFeedbacks() {
             title: "Description",
             dataIndex: "description",
             key: "description",
-            render: (text) => (
-                text.length > 30 ? `${text.substring(0, 30)}...` : text
-            ),
+            render: (text) => (text.length > 30 ? `${text.substring(0, 30)}...` : text),
         },
         {
             title: "Timestamp",
@@ -94,32 +87,35 @@ function ManageFeedbacks() {
         },
     ];
 
-    // Function to filter the CSV data based on the search title
+    // Function to get CSV data excluding certain columns
     const getFilteredCSVData = () => {
-        const filteredFeedbacks = searchTitle
-            ? allFeedbacks.filter(feedback => feedback.title.toLowerCase().includes(searchTitle.toLowerCase())) // Filter by title
-            : allFeedbacks; // If no title is entered, export all feedbacks
+        const filteredFeedbacks = selectedRowKeys.length > 0
+            ? allFeedbacks.filter(feedback => selectedRowKeys.includes(feedback._id)) // Use selected feedback IDs
+            : allFeedbacks.filter(feedback => feedback.title.toLowerCase().includes(searchTitle.toLowerCase())); // Fallback to search title
 
+        // Return feedback data but exclude the specified columns
         return filteredFeedbacks.map(feedback => ({
-            FeedbackID: feedback._id,
-            Title: feedback.title,
-            Category: feedback.category,
-            Username: feedback.username,
-            UserID: feedback.userID,
-            Rating: feedback.rating,
-            Description: feedback.description,
-            Timestamp: new Date(feedback.createdAt).toLocaleString(),
+            // Add the columns you want to keep (in this case, nothing, but you can modify this)
+            // We are keeping it empty to exclude all specified columns
         }));
     };
 
-    // Function to generate the CSV filename based on the first filtered feedback title
     const getCSVFilename = () => {
         const filteredFeedbacks = getFilteredCSVData();
         if (filteredFeedbacks.length > 0) {
-            const title = filteredFeedbacks[0].Title.replace(/\s+/g, '_'); // Replace spaces with underscores
-            return `${title}-feedbacks.csv`; // Format filename as "Title-feedbacks.csv"
+            const title = filteredFeedbacks[0].Title ? filteredFeedbacks[0].Title.replace(/\s+/g, '_') : "filtered";
+            return `${title}-feedbacks.csv`;
         }
-        return "filtered-feedbacks.csv"; // Default filename if no feedback is filtered
+        return "filtered-feedbacks.csv";
+    };
+
+    const onSelectChange = (newSelectedRowKeys) => {
+        setSelectedRowKeys(newSelectedRowKeys); // Update selected feedback IDs
+    };
+
+    const rowSelection = {
+        selectedRowKeys,
+        onChange: onSelectChange,
     };
 
     return (
@@ -130,15 +126,15 @@ function ManageFeedbacks() {
             <Input
                 placeholder="Search by Title"
                 value={searchTitle}
-                onChange={(e) => setSearchTitle(e.target.value)} // Update search title
+                onChange={(e) => setSearchTitle(e.target.value)}
                 style={{ width: 200, marginBottom: '20px' }}
             />
 
             <div className="csv_button_container_123">
                 <Button type="primary" className="csv_button_admin_123">
                     <CSVLink
-                        data={getFilteredCSVData()} // Export only filtered feedbacks
-                        filename={getCSVFilename()} // Set filename based on filtered feedback title
+                        data={getFilteredCSVData()}
+                        filename={getCSVFilename()}
                         style={{ textDecoration: 'none', color: 'inherit' }}
                     >
                         Export <AiFillPrinter style={{ marginLeft: '8px' }} />
@@ -147,9 +143,10 @@ function ManageFeedbacks() {
             </div>
 
             <Table
+                rowSelection={rowSelection} // Enable row selection
                 columns={columns}
                 dataSource={feedbacks.filter(feedback =>
-                    feedback.title.toLowerCase().includes(searchTitle.toLowerCase()) // Filter table data by title
+                    feedback.title.toLowerCase().includes(searchTitle.toLowerCase())
                 )}
                 loading={loading}
                 pagination={{

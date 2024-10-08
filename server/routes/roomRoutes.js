@@ -4,6 +4,7 @@ const roomsModel = require("../models/Room"); // import model
 const ReservationModel = require("../models/Resevation"); // import model
 const UserSuggestion = require("../models/userSuggestion"); // import model
 
+
 // Get all rooms
 router.get("/getRooms", async (req, res) => {
       try {
@@ -44,6 +45,32 @@ router.post("/addRoom", async (req, res) => {
             amenities,
             status,
       } = req.body;
+
+      // // Backend validation
+      // Allowed bed types
+      const allowedBedTypes = ["Master bed", "Double bed", "Futon bed"];
+
+      // Validate bed type
+      if (!allowedBedTypes.includes(bedType)) {
+            return res.status(400).json({
+                  message: `Invalid bed type. Allowed types are: ${allowedBedTypes.join(", ")}`,
+            });
+      }
+
+      // Validate price
+      if (price <= 1000) {
+            return res.status(400).json({
+                  message: "Room price must be greater than 1000",
+            });
+      }
+
+      // if (!roomNumber || !roomType || !price) {
+      //       return res.status(400).json({ message: "Room number, type, and price are required." });
+      // }
+      
+      // if (typeof price !== "number" || price <= 0) {
+      //       return res.status(400).json({ message: "Price must be a positive number." });
+      // }
 
       try {
             // Check if a room with the same room number already exists

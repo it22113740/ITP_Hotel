@@ -16,7 +16,7 @@ async function generateUniqueItemId() {
         if (!existingItem) {
             unique = true;
         }
-    }
+    } 
     
     return itemId;
 }
