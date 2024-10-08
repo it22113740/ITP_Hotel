@@ -8,6 +8,7 @@ import ParkingBookings from "../components/User/ParkingBookings";
 import LeaveDetails from "../components/User/LeaveDetails";
 import Feedbacks from "../components/User/Feedbacks";
 import Packages from "../components/User/PackageBooking";
+import SalaryDetails from "../components/User/SalaryDetails";
 
 function UserProfilePage() {
     const [user, setUser] = useState({});
@@ -18,6 +19,7 @@ function UserProfilePage() {
         lastName: "",
         email: "",
         username: "",
+        profilePic: null, // Added profilePic
     });
 
     // Handle tab change
@@ -34,6 +36,7 @@ function UserProfilePage() {
                 lastName: currentUser.lastName,
                 email: currentUser.email,
                 username: currentUser.username,
+                profilePic: currentUser.profilePic, // Added profilePic
             });
         }
     }, []);
@@ -52,12 +55,20 @@ function UserProfilePage() {
 
     const handleSave = async () => {
         try {
+            const formDataToSend = new FormData();
+            formDataToSend.append("userID", user.userID);
+            formDataToSend.append("firstName", formData.firstName);
+            formDataToSend.append("lastName", formData.lastName);
+            formDataToSend.append("email", formData.email);
+            formDataToSend.append("username", formData.username);
+            if (formData.profilePic) {
+                formDataToSend.append("profilePic", formData.profilePic);
+            }
+
             const response = await axios.post(
                 "http://localhost:5000/api/user/updateUser",
-                {
-                    userID: user.userID,
-                    ...formData,
-                }
+                formDataToSend,
+                { headers: { "Content-Type": "multipart/form-data" } } // Important for file uploads
             );
 
             const updatedUser = response.data.user;
@@ -80,7 +91,11 @@ function UserProfilePage() {
             <div className={`profile-card-1234`}>
                 <div className={`profile-header-1234`}>
                     <img
-                        src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Windows_10_Default_Profile_Picture.svg/1200px-Windows_10_Default_Profile_Picture.svg.png"
+                        src={
+                            user.profilePic
+                            ? user.profilePic // Use the user's profile picture if available
+                                : "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Windows_10_Default_Profile_Picture.svg/1200px-Windows_10_Default_Profile_Picture.svg.png"
+                        }
                         alt="Profile"
                     />
                     <div className={`profile-info-1234`}>
@@ -130,14 +145,19 @@ function UserProfilePage() {
                         <Tabs.TabPane tab="Feedbacks" key="5">
                             <Feedbacks />
                         </Tabs.TabPane>
+                        <Tabs.TabPane tab="Packages" key="7">
+                            <Packages/>
+                        </Tabs.TabPane>
                         {user.userType === "Employee" && (
                             <Tabs.TabPane tab="Leaves" key="6">
                                 <LeaveDetails />
                             </Tabs.TabPane>
                         )}
-                        <Tabs.TabPane tab="Packages" key="7">
-                            <Packages/>
+                        {user.userType === "Employee" && (
+                        <Tabs.TabPane tab="Salary Details" key="10">
+                            <SalaryDetails/>
                         </Tabs.TabPane>
+                        )}
                     </Tabs>
                 </ConfigProvider>
             </div>
@@ -180,6 +200,20 @@ function UserProfilePage() {
                                 name="username"
                                 value={formData.username}
                                 onChange={handleInputChange}
+                            />
+                        </label>
+                        <label>
+                            Profile Picture:
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={(e) => {
+                                    const file = e.target.files[0];
+                                    setFormData({
+                                        ...formData,
+                                        profilePic: file, // Update the profilePic in formData
+                                    });
+                                }}
                             />
                         </label>
                         <div className={`modal-buttons-1234`}>

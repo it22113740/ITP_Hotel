@@ -13,20 +13,21 @@ function SignupPage() {
         password: '',
         confirmPassword: '',
         agreeToTerms: false,
+        profilePic: null, // Initialize profilePic state
     });
 
     const navigate = useNavigate(); // Initialize the useNavigate hook
 
     const handleChange = (e) => {
-        const { name, value, type, checked } = e.target;
+        const { name, value, type, checked, files } = e.target;
         setFormData({
             ...formData,
-            [name]: type === 'checkbox' ? checked : value,
+            [name]: type === 'checkbox' ? checked : type === 'file' ? files[0] : value, // Handle file input
         });
     };
 
     const validateForm = () => {
-        const { firstName, lastName, email, username, password, confirmPassword, agreeToTerms } = formData;
+        const { firstName, lastName, email, username, password, confirmPassword, agreeToTerms, profilePic } = formData;
 
         // Check if all required fields are filled
         if (!firstName || !lastName || !email || !username || !password || !confirmPassword) {
@@ -46,6 +47,12 @@ function SignupPage() {
             return false;
         }
 
+        // Check if profile picture is selected
+        if (!profilePic) {
+            message.error('Please upload a profile picture.');
+            return false;
+        }
+
         return true;
     };
 
@@ -58,7 +65,20 @@ function SignupPage() {
         }
 
         try {
-            const response = await axios.post('http://localhost:5000/api/user/signup', formData);
+            const formDataToSend = new FormData(); // Create a new FormData object
+            formDataToSend.append('firstName', formData.firstName);
+            formDataToSend.append('lastName', formData.lastName);
+            formDataToSend.append('email', formData.email);
+            formDataToSend.append('username', formData.username);
+            formDataToSend.append('password', formData.password);
+            formDataToSend.append('confirmPassword', formData.confirmPassword);
+            formDataToSend.append('profilePic', formData.profilePic); // Append the profile picture file
+
+            const response = await axios.post('http://localhost:5000/api/user/signup', formDataToSend, {
+                headers: {
+                    'Content-Type': 'multipart/form-data', // Set the content type to multipart/form-data
+                },
+            });
 
             if (response.status === 201) {
                 message.success(response.data.message);
@@ -78,6 +98,7 @@ function SignupPage() {
                     password: '',
                     confirmPassword: '',
                     agreeToTerms: false,
+                    profilePic: null, // Reset profilePic
                 });
             } else {
                 message.error(response.data.message);
@@ -150,6 +171,15 @@ function SignupPage() {
                                 placeholder="Confirm Password"
                                 className="sg_signup_page_input"
                                 value={formData.confirmPassword}
+                                onChange={handleChange}
+                            />
+                        </div>
+                        <div className="sg_signup_page_input_group">
+                            <input
+                                type="file" // Add file input for profile picture
+                                name="profilePic"
+                                accept="image/*" // Accept only image files
+                                className="sg_signup_page_input margin-top" // Add margin-top class here
                                 onChange={handleChange}
                             />
                         </div>
