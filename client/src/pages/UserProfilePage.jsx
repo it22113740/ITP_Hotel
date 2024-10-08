@@ -161,7 +161,7 @@ function UserProfilePage() {
                         <Tabs.TabPane tab="Salary Details" key="10">
                             <SalaryDetails/>
                         </Tabs.TabPane>
-
+)}
                         {user.email === "cheff@gmail.com" && (
                             <Tabs.TabPane tab="Meal Orders" key="6">
                                 <Cheff/>
