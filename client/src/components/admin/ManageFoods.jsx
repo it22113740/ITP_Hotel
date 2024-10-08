@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Input, Button, message, Modal, Form, Select, InputNumber, Image } from 'antd';
+import { Table, Input, Button, message, Modal, Form, Select, InputNumber, Image, Dropdown, Menu, Checkbox } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, DownloadOutlined } from '@ant-design/icons';
 import axios from 'axios';
 import fileDownload from 'js-file-download'; // Import the file download package
@@ -9,19 +9,31 @@ const { Option } = Select;
 
 const ManageCateringFoods = () => {
   const [foods, setFoods] = useState([]);
+  const [allFoods, setAllFoods] = useState([]); // Store the original list of foods
   const [loading, setLoading] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingFood, setEditingFood] = useState(null);
+  const [selectedFields, setSelectedFields] = useState([
+    'ItemID',
+    'Name',
+    'Description',
+    'Price',
+    'Category',
+    'Type',
+    'ImageURL',
+  ]);
   const [form] = Form.useForm();
 
   useEffect(() => {
     fetchFoods();
   }, []);
 
+  // Fetch food items from the API
   const fetchFoods = async () => {
     try {
       const response = await axios.get('http://localhost:5000/api/catering/getItems');
       setFoods(response.data || []);
+      setAllFoods(response.data || []); // Store the full list of foods
     } catch (error) {
       message.error('Failed to fetch foods');
     } finally {
@@ -29,10 +41,22 @@ const ManageCateringFoods = () => {
     }
   };
 
+  // Handle search input
   const handleSearch = (value) => {
-    // Implement search functionality
+    if (value.trim() === '') {
+      setFoods(allFoods); // Reset to the full list when the search input is cleared
+    } else {
+      const filteredFoods = allFoods.filter((food) =>
+        food.name.toLowerCase().includes(value.toLowerCase()) ||
+        food.description.toLowerCase().includes(value.toLowerCase()) ||
+        food.category.toLowerCase().includes(value.toLowerCase()) ||
+        food.type.toLowerCase().includes(value.toLowerCase())
+      );
+      setFoods(filteredFoods);
+    }
   };
 
+  // Show the modal for adding/editing food items
   const showModal = (food = null) => {
     setEditingFood(food);
     setModalVisible(true);
@@ -43,6 +67,7 @@ const ManageCateringFoods = () => {
     }
   };
 
+  // Handle submission of the form
   const handleOk = () => {
     form.validateFields().then(async (values) => {
       try {
@@ -61,6 +86,7 @@ const ManageCateringFoods = () => {
     });
   };
 
+  // Handle deletion of a food item
   const handleDelete = async (itemId) => {
     Modal.confirm({
       title: 'Are you sure you want to delete this food item?',
@@ -76,36 +102,86 @@ const ManageCateringFoods = () => {
     });
   };
 
-  // CSV Export Function
+  // Export foods to CSV
   const exportToCSV = () => {
-    const csvData = foods.map((food) => ({
-      ItemID: food.itemId,
-      Name: food.name,
-      Description: food.description,
-      Price: `$${food.price.toFixed(2)}`,
-      Category: food.category,
-      Type: food.type,
-      ImageURL: food.imageUrl,
-    }));
+    const csvData = foods.map((food) => {
+      const item = {};
+      selectedFields.forEach((field) => {
+        switch (field) {
+          case 'ItemID':
+            item[field] = food.itemId || '';
+            break;
+          case 'ImageURL':
+            item[field] = food.imageUrl || '';
+            break;
+          case 'Name':
+            item[field] = food.name || '';
+            break;
+          case 'Description':
+            item[field] = food.description || '';
+            break;
+          case 'Price':
+            item[field] = food.price ? `$${food.price.toFixed(2)}` : '';
+            break;
+          case 'Category':
+            item[field] = food.category || '';
+            break;
+          case 'Type':
+            item[field] = food.type || '';
+            break;
+          default:
+            item[field] = ''; // Fallback for any unknown fields
+        }
+      });
+      return item;
+    });
 
     const csvContent = [
-      ["ItemID", "Name", "Description", "Price", "Category", "Type", "ImageURL"],
-      ...csvData.map((item) =>
-        [item.ItemID, item.Name, item.Description, item.Price, item.Category, item.Type, item.ImageURL]
-      ),
+      selectedFields,
+      ...csvData.map((item) => selectedFields.map((field) => item[field]))
     ]
-      .map((e) => e.join(","))
-      .join("\n");
+      .map((e) => e.join(','))
+      .join('\n');
 
     fileDownload(csvContent, 'catering_foods_report.csv');
   };
 
+  // Dropdown menu with checkboxes for selecting fields
+  const menu = (
+    <Menu>
+      {['ItemID', 'Name', 'Description', 'Price', 'Category', 'Type', 'ImageURL'].map((field) => (
+        <Menu.Item key={field}>
+          <Checkbox
+            checked={selectedFields.includes(field)}
+            onChange={(e) => {
+              if (e.target.checked) {
+                setSelectedFields([...selectedFields, field]);
+              } else {
+                setSelectedFields(selectedFields.filter((item) => item !== field));
+              }
+            }}
+          >
+            {field}
+          </Checkbox>
+        </Menu.Item>
+      ))}
+    </Menu>
+  );
+
+  // Define columns for the table
   const columns = [
     {
       title: 'Image',
       dataIndex: 'imageUrl',
       key: 'imageUrl',
-      render: (text) => <Image src={text} alt="food" width={100} />,
+      render: (text) => (
+        <Image 
+          src={text} 
+          alt="food" 
+          width={100}  
+          height={100} 
+        />
+      ),
     },
     { title: 'Item ID', dataIndex: 'itemId', key: 'itemId' },
     { title: 'Name', dataIndex: 'name', key: 'name' },
@@ -136,20 +212,25 @@ const ManageCateringFoods = () => {
           enterButton
         />
         <div>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => showModal()}
-            style={{ marginRight: 10 }}
-          >
-            Add New Food
-          </Button>
+          <Dropdown overlay={menu} placement="bottomRight" trigger={['click']}>
+            <Button type="default" style={{ marginRight: 10 }}>
+              Select Fields
+            </Button>
+          </Dropdown>
           <Button
             type="default"
             icon={<DownloadOutlined />}
             onClick={exportToCSV}
           >
             Export CSV
+          </Button>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={() => showModal(null)} // Show modal for adding new food item
+            style={{ marginLeft: 10 }}
+          >
+            Add Food
           </Button>
         </div>
       </div>
@@ -167,7 +248,7 @@ const ManageCateringFoods = () => {
         onCancel={() => setModalVisible(false)}
       >
         <Form form={form} layout="vertical">
-          <Form.Item name="imageUrl" label="Image URL">
+          <Form.Item name="imageUrl" label="Image URL" rules={[{ required: true }]}>
             <Input />
           </Form.Item>
           <Form.Item name="name" label="Name" rules={[{ required: true }]}>
@@ -181,15 +262,17 @@ const ManageCateringFoods = () => {
           </Form.Item>
           <Form.Item name="type" label="Type" rules={[{ required: true }]}>
             <Select>
-              <Option value="vegi">Veg</Option>
-              <Option value="non vegi">Non-Veg</Option>
+              <Option value="vegetable">Vegetable</Option>
+              <Option value="non-vegetable">Non-Vegetable</Option>
+              <Option value="drink">Drink</Option>
             </Select>
           </Form.Item>
           <Form.Item name="category" label="Category" rules={[{ required: true }]}>
             <Select>
-              <Option value="breakfast">Breakfast</Option>
-              <Option value="lunch">Lunch</Option>
-              <Option value="dinner">Dinner</Option>
+              <Option value="starters">Starters</Option>
+              <Option value="main course">Main Course</Option>
+              <Option value="desserts">Desserts</Option>
+              <Option value="beverages">Beverages</Option>
             </Select>
           </Form.Item>
         </Form>
