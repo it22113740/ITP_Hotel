@@ -364,5 +364,97 @@ router.get('/getEmployeesByDepartment/:department', async (req, res) => {
     }
 });
 
+router.post('/addSalary', async (req, res) => {
+    const { employeeId, amount, bank, bankBranchNumber, accountNumber } = req.body;
+
+    try {
+        const employee = await employeeModel.findOne({ employeeId });
+        if (!employee) {
+            return res.status(404).json({ message: 'Employee not found' });
+        }
+
+        // Update or add salary details
+        employee.salary = {
+            amount,
+            bank,
+            bankBranchNumber,
+            accountNumber,
+            dateAdded: Date.now() // Set the current date when adding the salary
+        };
+        
+        await employee.save();
+
+        res.status(200).json({
+            message: 'Salary added successfully',
+            salary: employee.salary
+        });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error: error.message });
+    }
+});
+
+// Route to view salary by employee ID
+router.get('/viewSalary/:employeeId', async (req, res) => {
+    const { employeeId } = req.params;
+
+    try {
+        const employee = await employeeModel.findOne({ employeeId });
+        if (!employee) {
+            return res.status(404).json({ message: 'Employee not found' });
+        }
+
+        res.status(200).json({ salary: employee.salary });
+    } catch (error) {
+        res.status(500).json({ message: 'Server error', error });
+    }
+});
+
+// Route to update employee dutyDate
+router.put('/updateDutyDate/:employeeId', async (req, res) => {
+    const { employeeId } = req.params;
+    const { dutyDate } = req.body;
+
+    try {
+        const updatedEmployee = await employeeModel.findOneAndUpdate(
+            { employeeId },
+            { dutyDate: new Date(dutyDate) },
+            { new: true }
+        );
+
+        if (!updatedEmployee) {
+            return res.status(404).json({ message: 'Employee not found' });
+        }
+
+        res.json(updatedEmployee);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error', error: err.message });
+    }
+});
+
+router.get('/getTodayDutyEmployees', async (req, res) => {
+    try {
+        const today = new Date();
+        // Remove the time part from the current date for an accurate date comparison
+        const todayStart = new Date(today.setHours(0, 0, 0, 0));
+        const todayEnd = new Date(today.setHours(23, 59, 59, 999));
+
+        const employees = await employeeModel.find({
+            dutyDate: {
+                $gte: todayStart,
+                $lte: todayEnd
+            }
+        });
+
+        if (employees.length === 0) {
+            return res.status(404).json({ message: 'No employees found with duty today' });
+        }
+
+        res.status(200).json(employees);
+    } catch (err) {
+        res.status(500).json({ message: 'Server error', error: err.message });
+    }
+});
+
+
 
 module.exports = router;

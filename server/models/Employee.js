@@ -59,6 +59,28 @@ const employeeSchema = new mongoose.Schema(
             type: String,
             default: "",
         },
+        salary: {
+            amount: {
+                type: Number
+            },
+            bank: {
+                type: String
+            },
+            bankBranchNumber: {
+                type: String
+            },
+            accountNumber: {
+                type: String
+            },
+            dateAdded: {
+                type: Date,
+                default: Date.now, // Automatically set to the current date when created
+            }
+        },
+        dutyDate: {
+            type: Date,
+            default: "",
+        },
     },
     { timestamps: true }
 );

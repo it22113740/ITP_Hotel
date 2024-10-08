@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Table, message, DatePicker, Modal, Button, Input, Checkbox } from "antd";
+import { Table, message, DatePicker, Modal, Button, Input, Checkbox ,Select ,Avatar} from "antd";
 import moment from "moment";
 import axios from "axios";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { Link } from "react-router-dom";
+import {
+    UserOutlined
+  } from "@ant-design/icons";
 
 function ManageParkings() {
     const [selectedDate, setSelectedDate] = useState("");
@@ -27,6 +30,9 @@ function ManageParkings() {
     const [selectedColumns, setSelectedColumns] = useState([
         "vehicleNumber", "price", "bookingDate", "packageType", "parkingId"
     ]);
+    const [selectedSecurityEmployee, setSelectedSecurityEmployee] = useState(null);
+    const [employees, setEmployees] = useState([]);
+    const [selectedEmployeeData, setSelectedEmployeeData] = useState(null);
 
     // New state for booking date filter
     const [filterBookingDate, setFilterBookingDate] = useState(null);
@@ -69,6 +75,19 @@ function ManageParkings() {
         } catch (error) {
             message.error("Failed to fetch bookings.");
         }
+    };
+
+    const fetchEmployeesByDepartment = async (department) => {
+        try {
+            const response = await axios.get(`/api/employee/getEmployeesByDepartment/${department}`);
+            setEmployees(response.data);
+        } catch (error) {
+            message.error(error.response?.data?.message || "Failed to fetch employees.");
+        }
+    };
+
+    const handleShowSecurityEmployees = () => {
+        fetchEmployeesByDepartment("Security");
     };
 
     const fetchPakingCount = async () => {
@@ -184,6 +203,15 @@ function ManageParkings() {
             body: data,
         });
         doc.save("parking-bookings.pdf");
+    };
+
+    const handleEmployeeSelection = (employeeId) => {
+        const selectedEmployee = employees.find(emp => emp._id === employeeId);
+        setSelectedSecurityEmployee(employeeId);
+        setSelectedEmployeeData({
+            name: selectedEmployee.firstName,
+            imageUrl: selectedEmployee.profilePictureUrl || null,
+        });
     };
 
     // Handle column selection for PDF generation
@@ -325,6 +353,65 @@ function ManageParkings() {
             </div>
 
             
+
+
+
+
+            
+            <div>
+            <DatePicker
+            onChange={(date) => setSelectedDate(date)}
+            value={selectedDate}
+            style={{ width: 200, marginRight: '10px' }}
+            placeholder="Select Date"
+        />
+        
+        {/* Security employee selection */}
+        <Select
+            style={{ width: 200 }}
+            placeholder="Select Security Employee"
+            onChange={handleEmployeeSelection}
+            onFocus={handleShowSecurityEmployees}
+        >
+            {employees.map(employee => (
+                <Select.Option key={employee._id} value={employee._id}>
+                    {employee.firstName}
+                </Select.Option>
+            ))}
+        </Select>
+
+        
+        
+        {selectedDate && selectedEmployeeData && (
+    <div style={{
+        marginTop: '20px',
+        backgroundColor: '#fff',
+        padding: '20px',
+        borderRadius: '8px',
+        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',  // Gray shadow
+        display: 'flex',
+        alignItems: 'center',
+        flexDirection: 'column',
+        marginBottom: '20px',
+            
+        textAlign: 'center',
+        maxWidth: '300px',
+        margin: 'auto'  // Center the box
+    }}>
+        <Avatar
+            size={100}
+            src={selectedEmployeeData.imageUrl}
+            icon={<UserOutlined />}
+        />
+        <h3 style={{ marginTop: '15px' }}>{selectedEmployeeData.name}</h3>
+    </div>
+)}
+
+       
+
+            </div>
+
+            
             <div style={{ marginTop: '20px' }}>
                 <h4>Total Bookings: {totalBookings}</h4>
                 <h4>Total Price: ${totalPrice}</h4>
@@ -406,3 +493,5 @@ function ManageParkings() {
 }
 
 export default ManageParkings;
+
+

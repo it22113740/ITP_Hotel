@@ -3,6 +3,7 @@ import { Modal, Button, Input, Rate, Pagination, message } from 'antd';
 import { LikeOutlined, DislikeOutlined, LikeFilled, DislikeFilled } from '@ant-design/icons';
 import axios from 'axios';
 
+
 const FeedbackPage = () => {
 
     const [userID, setUserID] = useState(null);
@@ -132,9 +133,14 @@ const FeedbackPage = () => {
                     onChange={handleSearch}
                     style={{ width: 300 }}
                 />
-                <Button type="primary" style={{ backgroundColor: '#25b05f' }} onClick={() => setVisibleAdd(true)}>
-                    Add Feedback
+                <Button type="primary" style={{ backgroundColor: '#25b05f', marginLeft: '900px'}} onClick={() => setVisibleAdd(true)}>
+                    Add Feedback 
                 </Button>
+                <Button type="primary" style={{ backgroundColor: '#25b05f' }} onClick={() => window.location.href =" http://localhost:3002"}>
+                  Chatbot
+                </Button>
+                
+                
             </div>
             <div className="feedback-list-6789">
                 {feedbacks.map(feedback => {

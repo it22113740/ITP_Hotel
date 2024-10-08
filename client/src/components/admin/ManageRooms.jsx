@@ -44,6 +44,7 @@ const ManageRooms = () => {
         const [form] = Form.useForm(); // Form instance for add room
         const [updateForm] = Form.useForm(); // Form instance for update room
 
+
         const [selectedSecurityEmployee, setSelectedSecurityEmployee] = useState(null);
         const [employees, setEmployees] = useState([]);
         const [selectedEmployeeData, setSelectedEmployeeData] = useState(null);
@@ -99,6 +100,7 @@ const ManageRooms = () => {
         };
 
 
+
         const fetchEmployeesByDepartment = async (department) => {
                 try {
                     const response = await axios.get(`/api/employee/getEmployeesByDepartment/${department}`);
@@ -113,9 +115,6 @@ const ManageRooms = () => {
             };
 
 
-
-
-
             const handleEmployeeSelection = (employeeId) => {
                 const selectedEmployee = employees.find(emp => emp._id === employeeId);
                 setSelectedSecurityEmployee(employeeId);
@@ -125,7 +124,6 @@ const ManageRooms = () => {
                 });
             };
 
-        
 
         // Fetch rooms from the API
         const fetchRooms = async () => {
@@ -349,7 +347,7 @@ const ManageRooms = () => {
                                                 </button>
                                         </div>
 
-                                        <Modal
+                          <Modal
                                                 title="Add Room"
                                                 open={isModalOpen}
                                                 onOk={addRoom}
@@ -536,7 +534,6 @@ const ManageRooms = () => {
                                 </div>
 
 
-        <div>
             <DatePicker
             onChange={(date) => setSelectedDate(date)}
             value={selectedDate}
@@ -570,9 +567,7 @@ const ManageRooms = () => {
                 <h3>{selectedEmployeeData.name}</h3>
             </div>
         )}
-        </div>
 
-                        {/* Room Analytics Section */}
                                 <div className="Type_Distribution">
                                         <RoomAnalyticsDashboard />
                                 </div>
