@@ -152,6 +152,7 @@ const AddFeedbackModal = ({ visible, onCancel, onSubmit, userID }) => {
     const [username, setUsername] = useState('');
     const [rating, setRating] = useState(0);
     const [description, setDescription] = useState('');
+    const [titleError, setTitleError] = useState(''); // For title validation error
 
     useEffect(() => {
         if (!visible) {
@@ -159,14 +160,40 @@ const AddFeedbackModal = ({ visible, onCancel, onSubmit, userID }) => {
             setUsername('');
             setRating(0);
             setDescription('');
+            setTitleError(''); // Reset validation error when modal is closed
         }
     }, [visible]);
 
+    const handleTitleChange = (e) => {
+        const newTitle = e.target.value;
+
+        // Validate title length (minimum 5, maximum 100 characters)
+        if (newTitle.length < 5) {
+            setTitleError('Title must be at least 5 characters.');
+        } else if (newTitle.length > 100) {
+            setTitleError('Title must be less than 100 characters.');
+        } else {
+            setTitleError(''); // Clear error if valid
+        }
+
+        setTitle(newTitle);
+    };
+
     const handleSubmit = () => {
-        if (!title || !username || rating === 0 || !description || !userID) {
-            message.error('Please fill in all fields');
+        // Check if title and description meet the length requirements
+        if (title.length < 5 || title.length > 100) {
+            message.error('Title must be between 5 and 100 characters.');
             return;
         }
+        if (description.length < 10 || description.length > 500) {
+            message.error('Description must be between 10 and 500 characters.');
+            return;
+        }
+        if (!username || rating === 0 || !userID) {
+            message.error('Please fill in all fields.');
+            return;
+        }
+
         const feedbackData = { title, username, rating, description, userID };
         onSubmit(feedbackData);
     };
@@ -179,13 +206,36 @@ const AddFeedbackModal = ({ visible, onCancel, onSubmit, userID }) => {
             onOk={handleSubmit}
             okText="Save"
         >
-            <Input placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
-            <Input placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} style={{ marginTop: '10px' }} />
-            <Rate value={rating} onChange={setRating} style={{ marginTop: '10px' }} />
-            <Input.TextArea placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} style={{ marginTop: '10px' }} />
+            <Input 
+                placeholder="Title" 
+                value={title} 
+                onChange={handleTitleChange} 
+                maxLength={100}  // Prevent exceeding 100 characters
+            />
+            {titleError && <span style={{ color: 'red' }}>{titleError}</span>} {/* Display error if invalid */}
+
+            <Input 
+                placeholder="Username" 
+                value={username} 
+                onChange={(e) => setUsername(e.target.value)} 
+                style={{ marginTop: '10px' }} 
+            />
+            <Rate 
+                value={rating} 
+                onChange={setRating} 
+                style={{ marginTop: '10px' }} 
+            />
+            <Input.TextArea 
+                placeholder="Description" 
+                value={description} 
+                onChange={(e) => setDescription(e.target.value)} 
+                style={{ marginTop: '10px' }} 
+                maxLength={500}  // Prevent exceeding 500 characters
+            />
         </Modal>
     );
 };
+
 
 const EditFeedbackModal = ({ visible, onCancel, onSubmit, feedback }) => {
     const [title, setTitle] = useState('');
