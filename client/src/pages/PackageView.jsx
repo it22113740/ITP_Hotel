@@ -72,6 +72,8 @@ function PackageView() {
                 guestPhone: values.phone,
                 startDate: values.dates[0].format("YYYY-MM-DD"), // Dates in moment format
                 endDate: values.dates[1].format("YYYY-MM-DD"),
+                discount: values.discount,
+
                 totalAmount: calculatedPrice,
               };
           
@@ -220,23 +222,28 @@ function PackageView() {
                                                 >
                                                         <Input />
                                                 </Form.Item>
+                                        
                                                 <Form.Item
-                                                        label="Start & End Dates"
-                                                        name="dates"
-                                                        rules={[
-                                                                {
-                                                                        required: true,
-                                                                        message: "Please select the start and end dates",
-                                                                },
-                                                        ]}
-                                                >
-                                                        <DatePicker.RangePicker
-                                                                format="YYYY-MM-DD"
-                                                                onChange={
-                                                                        onDateChange
-                                                                }
-                                                        />
-                                                </Form.Item>
+    label="Start & End Dates"
+    name="dates"
+    rules={[
+        {
+            required: true,
+            message: "Please select the start and end dates",
+        },
+    ]}
+>
+    <DatePicker.RangePicker
+        format="YYYY-MM-DD"
+        disabledDate={(current) => {
+            // Disable all past dates including today
+            return current && current < moment().startOf('day');
+        }}
+        onChange={onDateChange}
+    />
+</Form.Item>
+
+                                              
                                         </Form>
                                 </Modal>
                         </div>
