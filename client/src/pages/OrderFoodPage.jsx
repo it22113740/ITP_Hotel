@@ -136,31 +136,54 @@ function MealOrderPage() {
       <hr />
       <div className="filter-bar">
         <button onClick={() => handleFilter("vegi")}>Vegetarian</button>
-        <button onClick={() => handleFilter("non vegi")}>Non-Vegetarian</button>
+        <button onClick={() => handleFilter("non-vegi")}>Non-Vegetarian</button>
         <button onClick={() => handleFilter("All")}>All</button>
         <button onClick={() => setShowMealPlanner(true)}>
           Open Meal Planner
         </button>
       </div>
 
-      <div className="meal-list">
-        {filteredMeals.map((meal) => (
-          <div className="meal-card" key={meal._id}>
-            <img src={meal.imageUrl} alt={meal.name} />
-            <div className="meal-details">
-              <h2>{meal.name}</h2>
-              <p>{meal.description}</p>
-              <p>Price: Rs. {meal.price}</p>
-              <button
-                className="order-button"
-                onClick={() => handleSelectMeal(meal)}
-              >
-                Add to Order
-              </button>
-            </div>
-          </div>
-        ))}
-      </div>
+      <div
+  className="meal-list"
+  style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'center' }}
+>
+  {filteredMeals.map((meal) => (
+    <div
+      className="meal-card"
+      key={meal._id}
+      style={{
+        border: '1px solid #ddd',
+        borderRadius: '10px',
+        boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+        padding: '16px',
+        maxWidth: '300px',
+        textAlign: 'center',
+        backgroundColor: '#fff',
+      }}
+    >
+      <img
+        src={meal.imageUrl}
+        alt={meal.name}
+        style={{ width: '100%', borderRadius: '8px' }}
+      />
+      <div
+  className="meal-details"
+  style={{ marginTop: '12px' }}
+>
+  <h2 style={{ fontSize: '1.5em', color: '#333' }}>{meal.name}</h2>
+  <p style={{ color: '#777' }}>{meal.description}</p>
+  <p style={{ color: '#333', fontWeight: 'bold' }}>Price: Rs. {meal.price}</p>
+  <button
+    className="order-button"
+    onClick={() => handleSelectMeal(meal)}
+  >
+    Add to Order
+  </button>
+</div>
+
+    </div>
+  ))}
+</div>
 
       <hr />
       <div className="order-summary">
