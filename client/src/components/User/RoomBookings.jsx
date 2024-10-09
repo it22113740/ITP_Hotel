@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { Modal, Button, Form, Input, DatePicker, message } from "antd";
-import moment from 'moment'; // Import moment for date formatting
+import moment from 'moment';
+import { QRCodeCanvas } from 'qrcode.react'; // Import QRCodeCanvas
+import html2canvas from 'html2canvas'; // Import html2canvas for download functionality
 
 function RoomBookings() {
     const [bookings, setBookings] = useState([]);
@@ -10,6 +12,7 @@ function RoomBookings() {
     const [form] = Form.useForm();
     const [currentPage, setCurrentPage] = useState(1);
     const itemsPerPage = 2;
+    const qrRef = useRef(); // Reference for QR code download
 
     // Fetch bookings data
     const getBookings = async () => {
@@ -43,8 +46,8 @@ function RoomBookings() {
         setIsEditModalOpen(true);
         form.setFieldsValue({
             guestName: booking.guestName,
-            checkInDate: moment(booking.checkInDate), // Set moment date
-            checkOutDate: moment(booking.checkOutDate), // Set moment date
+            checkInDate: moment(booking.checkInDate),
+            checkOutDate: moment(booking.checkOutDate),
         });
     };
 
@@ -59,8 +62,8 @@ function RoomBookings() {
             const values = await form.validateFields();
             await axios.put(`/api/room/updateBooking/${selectedBooking._id}`, {
                 guestName: values.guestName,
-                checkInDate: values.checkInDate.format('YYYY-MM-DD'), // Format date
-                checkOutDate: values.checkOutDate.format('YYYY-MM-DD'), // Format date
+                checkInDate: values.checkInDate.format('YYYY-MM-DD'),
+                checkOutDate: values.checkOutDate.format('YYYY-MM-DD'),
             });
             message.success("Booking updated successfully");
             setIsEditModalOpen(false);
@@ -86,6 +89,16 @@ function RoomBookings() {
         getBookings();
     }, []);
 
+    // Function to download QR code
+    const downloadQR = () => {
+        html2canvas(qrRef.current).then((canvas) => {
+            const link = document.createElement('a');
+            link.download = `Booking_QR_${selectedBooking.bookingID}.png`;
+            link.href = canvas.toDataURL();
+            link.click();
+        });
+    };
+
     return (
         <div className="bookings-container">
             <h2>Your Room Bookings</h2>
@@ -97,15 +110,17 @@ function RoomBookings() {
                         {currentBookings.map((booking) => (
                             <div key={booking._id} className="booking-card">
                                 <h3>Booking ID: {booking.bookingID}</h3>
-                                <p>Room Number: {booking.roomNumber}</p>                              
+                                <p>Room Number: {booking.roomNumber}</p>
                                 <p>Guest Name: {booking.guestName}</p>
                                 <p>Packages: {booking.packages.join(" , ")}</p>
-                                <p>Check-in: {moment(booking.checkInDate).format('YYYY-MM-DD')}</p> {/* Format date */}
-                                <p>Check-out: {moment(booking.checkOutDate).format('YYYY-MM-DD')}</p> {/* Format date */}
+                                <p>Check-in: {moment(booking.checkInDate).format('YYYY-MM-DD')}</p>
+                                <p>Check-out: {moment(booking.checkOutDate).format('YYYY-MM-DD')}</p>
                                 <h5>Total Amount: Rs {booking.totalAmount}</h5>
                                 <div className="card-buttons">
                                     <Button type="primary" onClick={() => handleEdit(booking)}>Edit</Button>
                                     <Button type="danger" onClick={() => deleteBooking(booking._id)}>Cancel</Button>
+                                    {/* Show QR code and download */}
+                                    <Button type="default" onClick={() => setSelectedBooking(booking)}>Show QR</Button>
                                 </div>
                             </div>
                         ))}
@@ -130,41 +145,29 @@ function RoomBookings() {
                 </>
             )}
 
-            {/* Edit Booking Modal */}
+            {/* QR Code Modal */}
             <Modal
-                title="Edit Booking"
-                open={isEditModalOpen}
-                onOk={handleOk}
-                onCancel={handleCancel}
-                okText="Update"
-                cancelText="Cancel"
+                title="Booking QR Code"
+                open={!!selectedBooking}
+                onOk={downloadQR}
+                onCancel={() => setSelectedBooking(null)}
+                okText="Download QR"
+                cancelText="Close"
             >
-                <Form form={form} layout="vertical">
-                    <Form.Item
-                        label="Guest Name"
-                        name="guestName"
-                        rules={[{ required: true, message: "Please enter guest name" }]}
-                    >
-                        <Input />
-                    </Form.Item>
-                    <Form.Item
-                        label="Check-in Date"
-                        name="checkInDate"
-                        rules={[{ required: true, message: "Please select check-in date" }]}
-                    >
-                        <DatePicker format="YYYY-MM-DD" />
-                    </Form.Item>
-                    <Form.Item
-                        label="Check-out Date"
-                        name="checkOutDate"
-                        rules={[{ required: true, message: "Please select check-out date" }]}
-                    >
-                        <DatePicker format="YYYY-MM-DD" />
-                    </Form.Item>
-                </Form>
+                {selectedBooking && (
+                    <div style={{ textAlign: 'center' }}>
+                        <QRCodeCanvas
+                            ref={qrRef}
+                            value={`Booking ID: ${selectedBooking.bookingID}\nRoom Number: ${selectedBooking.roomNumber}\nGuest Name: ${selectedBooking.guestName}\nCheck-in: ${moment(selectedBooking.checkInDate).format('YYYY-MM-DD')}\nCheck-out: ${moment(selectedBooking.checkOutDate).format('YYYY-MM-DD')}\nTotal Amount: Rs ${selectedBooking.totalAmount}`}
+                            size={250}
+                        />
+                    </div>
+                )}
             </Modal>
         </div>
     );
 }
 
 export default RoomBookings;
+
+
