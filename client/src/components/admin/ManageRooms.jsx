@@ -46,19 +46,8 @@ const ManageRooms = () => {
         const [form] = Form.useForm(); // Form instance for add room
         const [updateForm] = Form.useForm(); // Form instance for update room
 
-        const [filterBookingDate, setFilterBookingDate] = useState(null);
-        const [employeeId, setEmployeeId] = useState('');
-        const [dutyDate, setDutyDate] = useState('');
-        const [message, setMessage] = useState('');
-        const [employeesOnDutyToday, setEmployeesOnDutyToday] = useState([]);
 
-        const [selectedSecurityEmployee, setSelectedSecurityEmployee] = useState(null);
-        const [employees, setEmployees] = useState([]);
-        const [selectedEmployeeData, setSelectedEmployeeData] = useState(null);
-        
-        const [selectedDate, setSelectedDate] = useState("");
-
-        const [reservations, setReservations] = useState([]); // Initialize state for reservations
+        const [reservations, setReservations] = useState([]);
 
         const OPTIONS = [
                 "WiFi",
@@ -223,31 +212,78 @@ const ManageRooms = () => {
                 setEditingRoom(null);
         };
 
-        const fetchEmployeesByDepartment = async (department) => {
-                try {
-                        const response = await axios.get(`/api/employee/getEmployeesByDepartment/${department}`);
 
-                    setEmployees(response.data);
+        const fetchReservations = async () => {
+                try {
+                  const response = await axios.get('/api/room/getBookings');
+                  console.log(response.data); // Log response to see if it contains 'bookings'
+                  setReservations(response.data.bookings); // Use 'bookings', not 'reservations'
                 } catch (error) {
-                    message.error(error.response?.data?.message || "Failed to fetch employees.");
+                  console.error('Error fetching reservations:', error);
+                  message.error('Failed to fetch reservations.');
                 }
-            };
+              };
+              
+              
+              // Fetch reservations data when component mounts
+              useEffect(() => {
+              fetchReservations();
+              console.log(reservations); // Check if reservations state has the correct data after setting it
+              }, [reservations]);
+
+
+              const column= [
+                {
+                  title: 'Booking ID',
+                  dataIndex: 'bookingID',
+                  key: 'bookingID',
+                },
+                {
+                  title: 'Room Number',
+                  dataIndex: 'roomNumber',
+                  key: 'roomNumber',
+                },
+                {
+                  title: 'Guest Name',
+                  dataIndex: 'guestName',
+                  key: 'guestName',
+                },
+                {
+                  title: 'Email',
+                  dataIndex: 'guestEmail',
+                  key: 'guestEmail',
+                },
+                {
+                  title: 'Phone',
+                  dataIndex: 'guestPhone',
+                  key: 'guestPhone',
+                },
+                {
+                  title: 'Check-in Date',
+                  dataIndex: 'checkInDate',
+                  key: 'checkInDate',
+                },
+                {
+                  title: 'Check-out Date',
+                  dataIndex: 'checkOutDate',
+                  key: 'checkOutDate',
+                },
+                {
+                  title: 'Total Amount',
+                  dataIndex: 'totalAmount',
+                  key: 'totalAmount',
+                },
+              ];
+
+
         
-            const handleShowSecurityEmployees = () => {
-                fetchEmployeesByDepartment("Cleaner");
-            };
+        
+
 
             
 
 
-            const handleEmployeeSelection = (employeeId) => {
-                const selectedEmployee = employees.find(emp => emp._id === employeeId);
-                setSelectedSecurityEmployee(employeeId);
-                setSelectedEmployeeData({
-                    name: selectedEmployee.firstName,
-                    imageUrl: selectedEmployee.profilePictureUrl || null,
-                });
-            };
+            
 
             const handleAssignClick = async () => {
                 try {
@@ -744,93 +780,7 @@ const ManageRooms = () => {
                                         </Modal>
                                 </div>
 
-       
-        
-       
-       
 
-<div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", padding: "20px", marginTop: "20px", marginBottom: "20px" }}>
-  {/* Left Column - Assign Duty Date */}
-  <div style={{ ...styles.container, textAlign: "left", width: "30%" }}>
-    <h2>Assign Cleaner for Today</h2>
-    <select
-      value={employeeId}
-      onChange={(e) => setEmployeeId(e.target.value)}
-      style={styles.input}
-      onFocus={handleShowSecurityEmployees}
-    >
-      <option value="" disabled>Select Cleaner</option>
-      {employees.length > 0 ? (
-        employees.map((employee) => (
-          <option key={employee.id} value={employee.employeeId}>
-            {employee.firstName}
-          </option>
-        ))
-      ) : (
-        <option disabled>No Employees Available</option>
-      )}
-    </select>
-    
-    <input
-      type="date"
-      value={dutyDate}
-      onChange={(e) => setDutyDate(e.target.value)}
-      style={styles.input}
-    />
-    
-    <button
-     onClick={handleAssignClick}
-      style={styles.button}
-      onMouseOver={(e) => e.currentTarget.style.backgroundColor = styles.buttonHover.backgroundColor}
-      onMouseOut={(e) => e.currentTarget.style.backgroundColor = styles.button.backgroundColor}
-    >
-      Assign
-    </button>
-    
-    {message && <p style={styles.message}>{message}</p>}
-  </div>
-{/* Middle Column - Employees on Duty Today */}
-<div style={{ ...styles.container, textAlign: "left", width: "30%" }}>
-    <h2>Cleaner on Duty Today</h2>
-    
-    {/* Debugging logs */}
-    {console.log("Loading status:", loading)}
-    {console.log("Employees on duty today:", employeesOnDutyToday)}
-
-    {loading ? (
-        <p>Loading employees...</p>
-    ) : employeesOnDutyToday && employeesOnDutyToday.length > 0 ? ( 
-        employeesOnDutyToday.map((employee) => (
-            <div
-                key={employee._id}
-                style={{
-                    display: "flex",
-                    alignItems: "center",
-                    marginBottom: "10px",
-                    padding: "10px",
-                    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)", // Gray shadow
-                    borderRadius: "8px",
-                }}
-            >
-                <Avatar
-                    size={50}
-                    src={employee.imageUrl || null}
-                    icon={<UserOutlined />}
-                    style={{ marginRight: "10px" }}
-                />
-                <span>{employee.firstName} {employee.lastName}</span>
-            </div>
-        ))
-    ) : (
-        <p>No employees are on duty today.</p>
-    )}
-</div>
-
-    
-    
-   
-  
-</div>
 
 <Table
       columns={column}   // Use the column structure defined above
