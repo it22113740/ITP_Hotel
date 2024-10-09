@@ -128,7 +128,7 @@ function ManageParkings() {
             setEmployeesOnDutyToday(response.data);
             message.success("Fetched employees with today's duty.");
         } catch (error) {
-           message.error("Failed to fetch employees with today's duty.");
+           
         } finally {
             setLoading(false);
         }
@@ -150,7 +150,7 @@ function ManageParkings() {
         setIsDeleteModalVisible(false); // Close delete modal
         window.location.reload();
     } catch (error) {
-        message.error("Failed to delete booking.");
+        
     }
 };
     const handleApproveDecline = async (parkingId, action) => {
