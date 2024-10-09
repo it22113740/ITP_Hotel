@@ -122,13 +122,18 @@ const ManageCateringFoods = () => {
     form.validateFields().then(async (values) => {
       try {
         const formData = new FormData();
-        formData.append('image', file);
+        // Append the image only if it's changed
+        if (file) {
+          formData.append('image', file);
+        }
         Object.keys(values).forEach(key => {
           formData.append(key, values[key]);
         });
-
+  
         if (editingFood) {
-          await axios.post('http://localhost:5000/api/catering/updateItem', { ...formData, itemId: editingFood.itemId });
+          // Include itemId in the formData for updates
+          formData.append('itemId', editingFood.itemId);
+          await axios.post('http://localhost:5000/api/catering/updateItem', formData);
           message.success('Food item updated successfully');
         } else {
           await axios.post('http://localhost:5000/api/catering/addItem', formData);
@@ -141,6 +146,7 @@ const ManageCateringFoods = () => {
       }
     });
   };
+  
 
   const handleDelete = async (itemId) => {
     Modal.confirm({

@@ -24,7 +24,7 @@ const cateringSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["vegi", "non vegi"],
+      enum: ["vegi", "non-vegi"],
       required: true,
     },
     category: {
