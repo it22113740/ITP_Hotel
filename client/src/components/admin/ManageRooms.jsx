@@ -647,9 +647,7 @@ const ManageRooms = () => {
                                                 </Form>
                                         </Modal>
                                 </div>
-                                
-        </div>
-        <div>
+                                <div>
         <Table
   columns={columnss}    // Use the column structure defined above
   dataSource={reservations}    // reservations data fetched from the backend
@@ -658,13 +656,9 @@ const ManageRooms = () => {
   scroll={{ y: 300 }}   // Set max height to 300px (or adjust to your needs)
 />
 </div>
-        
-
-                        {/* Room Analytics Section */}
-                                <div className="Type_Distribution">
+<div className="Type_Distribution">
                                         <RoomAnalyticsDashboard />
                                 </div>
-                                
                                 <div className="manageroom_table">
                                         <Table
                                                 columns={columns}
@@ -674,6 +668,14 @@ const ManageRooms = () => {
                                                 pagination={{ pageSize: 6 }} // Display 6 rows per page
                                         />
                                 </div>
+        </div>
+        
+        
+
+                        {/* Room Analytics Section */}
+                                
+                                
+                                
 
                                 <Modal
                                         title="Update Room"
