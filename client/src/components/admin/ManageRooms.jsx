@@ -33,6 +33,7 @@ import { CSVLink } from "react-csv"; // Import CSVLink
 
 const ManageRooms = () => {
         // State declarations for modals and data
+        const [loading, setLoading] = useState(false);
         const [isModalOpen, setIsModalOpen] = useState(false);
         const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
         const [rooms, setRooms] = useState([]);
@@ -40,9 +41,11 @@ const ManageRooms = () => {
         const [searchTerm, setSearchTerm] = useState("");
         const [filteredRooms, setFilteredRooms] = useState([]);
         const [selectedItems, setSelectedItems] = useState([]);
+        const [filteredRoomsReserve, setFilteredRoomsReserve] = useState([]);
 
         const [form] = Form.useForm(); // Form instance for add room
         const [updateForm] = Form.useForm(); // Form instance for update room
+
 
         const [reservations, setReservations] = useState([]);
 
@@ -55,8 +58,73 @@ const ManageRooms = () => {
                 "Restaurant",
         ];
 
+  
 
-            // CSV data
+        const fetchReservations = async () => {
+                try {
+                  const response = await axios.get('/api/room/getBookings');
+                  console.log(response.data); // Log response to see if it contains 'bookings'
+                  setReservations(response.data.bookings); // Use 'bookings', not 'reservations'
+                } catch (error) {
+                  console.error('Error fetching reservations:', error);
+                  message.error('Failed to fetch reservations.');
+                }
+              };
+              
+
+      // Fetch reservations data when component mounts
+      useEffect(() => {
+        fetchReservations();
+        console.log(reservations); // Check if reservations state has the correct data after setting it
+    }, [reservations]);
+    
+
+    
+
+
+
+    // Internal CSS styles
+    const styles = {
+        container: {
+            padding: '20px',
+            backgroundColor: '#f7f9fc',
+            borderRadius: '8px',
+            boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)',
+            maxWidth: '400px',
+            margin: 'auto',
+            textAlign: 'center',
+        },
+        input: {
+            width: '80%',
+            padding: '10px',
+            margin: '10px 0',
+            border: '1px solid #ccc',
+            borderRadius: '5px',
+        },
+        button: {
+            backgroundColor: '#27ae60',
+            color: 'white',
+            padding: '10px 18px',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            fontSize: '16px',
+            transition: 'background-color 0.3s',
+        },
+        buttonHover: {
+            backgroundColor: '#219150',
+        },
+        message: {
+            marginTop: '15px',
+            color: '#e74c3c', // Red color for error messages
+        },
+    };
+
+    
+
+   
+
+        // CSV data
         const csvHeaders = [
                 { label: "Room Number", key: "roomNumber" },
                 { label: "Room Type", key: "roomType" },
@@ -72,6 +140,57 @@ const ManageRooms = () => {
         const filteredOptions = OPTIONS.filter(
                 (option) => !selectedItems.includes(option)
         );
+
+
+         // Define your columns
+         const column= [
+           {
+             title: 'Booking ID',
+             dataIndex: 'bookingID',
+             key: 'bookingID',
+           },
+           {
+             title: 'Room Number',
+             dataIndex: 'roomNumber',
+             key: 'roomNumber',
+           },
+           {
+             title: 'Guest Name',
+             dataIndex: 'guestName',
+             key: 'guestName',
+           },
+           {
+             title: 'Email',
+             dataIndex: 'guestEmail',
+             key: 'guestEmail',
+           },
+           {
+             title: 'Phone',
+             dataIndex: 'guestPhone',
+             key: 'guestPhone',
+           },
+           {
+             title: 'Check-in Date',
+             dataIndex: 'checkInDate',
+             key: 'checkInDate',
+           },
+           {
+             title: 'Check-out Date',
+             dataIndex: 'checkOutDate',
+             key: 'checkOutDate',
+           },
+           {
+             title: 'Total Amount',
+             dataIndex: 'totalAmount',
+             key: 'totalAmount',
+           },
+         ];
+
+
+
+
+
+    
 
         // Show and hide modals
         const showModal = () => setIsModalOpen(true);
@@ -92,6 +211,7 @@ const ManageRooms = () => {
                 updateForm.resetFields();
                 setEditingRoom(null);
         };
+
 
         const fetchReservations = async () => {
                 try {
@@ -158,11 +278,29 @@ const ManageRooms = () => {
 
         
         
-            
 
 
             
 
+
+            
+
+            const handleAssignClick = async () => {
+                try {
+                    const response = await axios.put(`/api/employee/updateDutyDate/${employeeId}`, {
+                        dutyDate,
+                    });
+            
+            
+                    setMessage(`Duty date updated successfully: ${response.data.dutyDate}`);
+                    setEmployeeId(''); // Clear employee ID
+                    setDutyDate('');
+                } catch (error) {
+                   
+                }
+            };
+
+        
 
         // Fetch rooms from the API
         const fetchRooms = async () => {
@@ -174,10 +312,75 @@ const ManageRooms = () => {
                         console.log(err);
                 }
         };
+        const mockReservations = [
+                {
+                    bookingID: '123',
+                    roomNumber: '101',
+                    guestName: 'John Doe',
+                    guestEmail: 'john@example.com',
+                    guestPhone: '1234567890',
+                    checkInDate: '2024-10-10',
+                    checkOutDate: '2024-10-15',
+                    totalAmount: 500,
+                },
+                {
+                    bookingID: '124',
+                    roomNumber: '102',
+                    guestName: 'Jane Smith',
+                    guestEmail: 'jane@example.com',
+                    guestPhone: '9876543210',
+                    checkInDate: '2024-10-12',
+                    checkOutDate: '2024-10-18',
+                    totalAmount: 650,
+                },
+                {
+                    bookingID: '125',
+                    roomNumber: '103',
+                    guestName: 'David Johnson',
+                    guestEmail: 'davidj@example.com',
+                    guestPhone: '4567890123',
+                    checkInDate: '2024-10-11',
+                    checkOutDate: '2024-10-14',
+                    totalAmount: 450,
+                },
+                {
+                    bookingID: '126',
+                    roomNumber: '104',
+                    guestName: 'Emily Davis',
+                    guestEmail: 'emilyd@example.com',
+                    guestPhone: '7890123456',
+                    checkInDate: '2024-10-15',
+                    checkOutDate: '2024-10-20',
+                    totalAmount: 700,
+                },
+                {
+                    bookingID: '127',
+                    roomNumber: '105',
+                    guestName: 'Michael Wilson',
+                    guestEmail: 'michaelw@example.com',
+                    guestPhone: '3216549870',
+                    checkInDate: '2024-10-16',
+                    checkOutDate: '2024-10-22',
+                    totalAmount: 800,
+                },
+                {
+                    bookingID: '128',
+                    roomNumber: '106',
+                    guestName: 'Sarah Brown',
+                    guestEmail: 'sarahb@example.com',
+                    guestPhone: '2345678901',
+                    checkInDate: '2024-10-20',
+                    checkOutDate: '2024-10-25',
+                    totalAmount: 550,
+                },
+            ];
+            
 
         useEffect(() => {
                 fetchRooms();
         }, []);
+
+        
 
         // Update filtered rooms when search term changes
         useEffect(() => {
@@ -239,10 +442,10 @@ const ManageRooms = () => {
                         await axios.put(
                                 `/api/room/updateRoom/${editingRoom._id}`,
                                 {
-                                        ...values,
-                                        amenities: selectedItems,
+                                    ...values,
+                                    amenities: selectedItems,
                                 }
-                        );
+                            );
                         setIsUpdateModalOpen(false);
                         message.success("Room updated successfully");
                         fetchRooms();
@@ -260,6 +463,7 @@ const ManageRooms = () => {
         const deleteRoom = async (id) => {
                 try {
                         await axios.delete(`/api/room/deleteRoom/${id}`);
+
                         message.success("Room deleted successfully");
                         fetchRooms(); // Refresh the list of rooms after deletion
                 } catch (err) {
@@ -384,9 +588,13 @@ const ManageRooms = () => {
                                                                 Download CSV
                                                         </CSVLink>
                                                 </button>
+                                                <div>
+                                                
+                                                        
+                                                        </div>
                                         </div>
 
-                          <Modal
+                                        <Modal
                                                 title="Add Room"
                                                 open={isModalOpen}
                                                 onOk={addRoom}
@@ -573,9 +781,6 @@ const ManageRooms = () => {
                                 </div>
 
 
-        
-        
-       
 
 <Table
       columns={column}   // Use the column structure defined above
@@ -583,6 +788,9 @@ const ManageRooms = () => {
       rowKey="bookingID"   // Unique key for each row
     />
 
+        </div>
+
+                        {/* Room Analytics Section */}
                                 <div className="Type_Distribution">
                                         <RoomAnalyticsDashboard />
                                 </div>
@@ -781,7 +989,7 @@ const ManageRooms = () => {
                                         </Form>
                                 </Modal>
                         </div>
-                </div>
+                
         );
 };
 
@@ -950,5 +1158,6 @@ const RoomAnalyticsDashboard = () => {
 };
 
 export default ManageRooms;
+
 
 
