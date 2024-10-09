@@ -142,49 +142,7 @@ const ManageRooms = () => {
         );
 
 
-         // Define your columns
-         const column= [
-           {
-             title: 'Booking ID',
-             dataIndex: 'bookingID',
-             key: 'bookingID',
-           },
-           {
-             title: 'Room Number',
-             dataIndex: 'roomNumber',
-             key: 'roomNumber',
-           },
-           {
-             title: 'Guest Name',
-             dataIndex: 'guestName',
-             key: 'guestName',
-           },
-           {
-             title: 'Email',
-             dataIndex: 'guestEmail',
-             key: 'guestEmail',
-           },
-           {
-             title: 'Phone',
-             dataIndex: 'guestPhone',
-             key: 'guestPhone',
-           },
-           {
-             title: 'Check-in Date',
-             dataIndex: 'checkInDate',
-             key: 'checkInDate',
-           },
-           {
-             title: 'Check-out Date',
-             dataIndex: 'checkOutDate',
-             key: 'checkOutDate',
-           },
-           {
-             title: 'Total Amount',
-             dataIndex: 'totalAmount',
-             key: 'totalAmount',
-           },
-         ];
+         
 
 
 
@@ -213,26 +171,9 @@ const ManageRooms = () => {
         };
 
 
-        const fetchReservations = async () => {
-                try {
-                  const response = await axios.get('/api/room/getBookings');
-                  console.log(response.data); // Log response to see if it contains 'bookings'
-                  setReservations(response.data.bookings); // Use 'bookings', not 'reservations'
-                } catch (error) {
-                  console.error('Error fetching reservations:', error);
-                  message.error('Failed to fetch reservations.');
-                }
-              };
-              
-              
-              // Fetch reservations data when component mounts
-              useEffect(() => {
-              fetchReservations();
-              console.log(reservations); // Check if reservations state has the correct data after setting it
-              }, [reservations]);
 
 
-              const column= [
+              const columnss= [
                 {
                   title: 'Booking ID',
                   dataIndex: 'bookingID',
@@ -285,21 +226,7 @@ const ManageRooms = () => {
 
             
 
-            const handleAssignClick = async () => {
-                try {
-                    const response = await axios.put(`/api/employee/updateDutyDate/${employeeId}`, {
-                        dutyDate,
-                    });
             
-            
-                    setMessage(`Duty date updated successfully: ${response.data.dutyDate}`);
-                    setEmployeeId(''); // Clear employee ID
-                    setDutyDate('');
-                } catch (error) {
-                   
-                }
-            };
-
         
 
         // Fetch rooms from the API
@@ -312,68 +239,7 @@ const ManageRooms = () => {
                         console.log(err);
                 }
         };
-        const mockReservations = [
-                {
-                    bookingID: '123',
-                    roomNumber: '101',
-                    guestName: 'John Doe',
-                    guestEmail: 'john@example.com',
-                    guestPhone: '1234567890',
-                    checkInDate: '2024-10-10',
-                    checkOutDate: '2024-10-15',
-                    totalAmount: 500,
-                },
-                {
-                    bookingID: '124',
-                    roomNumber: '102',
-                    guestName: 'Jane Smith',
-                    guestEmail: 'jane@example.com',
-                    guestPhone: '9876543210',
-                    checkInDate: '2024-10-12',
-                    checkOutDate: '2024-10-18',
-                    totalAmount: 650,
-                },
-                {
-                    bookingID: '125',
-                    roomNumber: '103',
-                    guestName: 'David Johnson',
-                    guestEmail: 'davidj@example.com',
-                    guestPhone: '4567890123',
-                    checkInDate: '2024-10-11',
-                    checkOutDate: '2024-10-14',
-                    totalAmount: 450,
-                },
-                {
-                    bookingID: '126',
-                    roomNumber: '104',
-                    guestName: 'Emily Davis',
-                    guestEmail: 'emilyd@example.com',
-                    guestPhone: '7890123456',
-                    checkInDate: '2024-10-15',
-                    checkOutDate: '2024-10-20',
-                    totalAmount: 700,
-                },
-                {
-                    bookingID: '127',
-                    roomNumber: '105',
-                    guestName: 'Michael Wilson',
-                    guestEmail: 'michaelw@example.com',
-                    guestPhone: '3216549870',
-                    checkInDate: '2024-10-16',
-                    checkOutDate: '2024-10-22',
-                    totalAmount: 800,
-                },
-                {
-                    bookingID: '128',
-                    roomNumber: '106',
-                    guestName: 'Sarah Brown',
-                    guestEmail: 'sarahb@example.com',
-                    guestPhone: '2345678901',
-                    checkInDate: '2024-10-20',
-                    checkOutDate: '2024-10-25',
-                    totalAmount: 550,
-                },
-            ];
+        
             
 
         useEffect(() => {
@@ -592,7 +458,9 @@ const ManageRooms = () => {
                                                 
                                                         
                                                         </div>
+                                                        
                                         </div>
+                                        
 
                                         <Modal
                                                 title="Add Room"
@@ -779,21 +647,24 @@ const ManageRooms = () => {
                                                 </Form>
                                         </Modal>
                                 </div>
-
-
-
-<Table
-      columns={column}   // Use the column structure defined above
-      dataSource={reservations}  // reservations data fetched from the backend
-      rowKey="bookingID"   // Unique key for each row
-    />
-
+                                
         </div>
+        <div>
+        <Table
+  columns={columnss}    // Use the column structure defined above
+  dataSource={reservations}    // reservations data fetched from the backend
+  rowKey="bookingID"    // Unique key for each row
+  pagination={false}    // Disable pagination (if you want all rows visible at once)
+  scroll={{ y: 300 }}   // Set max height to 300px (or adjust to your needs)
+/>
+</div>
+        
 
                         {/* Room Analytics Section */}
                                 <div className="Type_Distribution">
                                         <RoomAnalyticsDashboard />
                                 </div>
+                                
                                 <div className="manageroom_table">
                                         <Table
                                                 columns={columns}
