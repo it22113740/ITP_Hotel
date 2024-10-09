@@ -79,16 +79,16 @@ function ManageParkings() {
             const response = await axios.get("/api/parking/getAllParkings");
             setBookings(response.data);
         } catch (error) {
-            message.error("Failed to fetch bookings.");
+           
         }
     };
 
     const fetchEmployeesByDepartment = async (department) => {
         try {
-            const response = await axios.get(`/api/employee/getEmployeesByDepartment/Security`);
+            const response = await axios.get(`/api/employee/getEmployeesByDepartment/${department}`);
             setEmployees(response.data);
         } catch (error) {
-            message.error(error.response?.data?.message || "Failed to fetch employees.");
+           
         }
     };
 
@@ -112,7 +112,7 @@ function ManageParkings() {
             });
             setAvailability(response.data);
         } catch (error) {
-            message.error("Failed to fetch availability.");
+            
         }
     };
 
@@ -124,7 +124,7 @@ function ManageParkings() {
     const fetchTodayDutyEmployees = async () => {
         setLoading(true);
         try {
-            const response = await axios.get("/api/employee/getTodayDutyEmployees");
+            const response = await axios.get(`/api/employee/getTodayDutyEmployees/${department}`);
             setEmployeesOnDutyToday(response.data);
             message.success("Fetched employees with today's duty.");
         } catch (error) {
@@ -136,7 +136,7 @@ function ManageParkings() {
 
     // Call fetchTodayDutyEmployees when component mounts
     useEffect(() => {
-        fetchTodayDutyEmployees();
+        fetchTodayDutyEmployees("Security");
     }, []);
 
   // Handles the deletion of a booking
@@ -148,6 +148,7 @@ function ManageParkings() {
         message.success("Booking deleted successfully.");
         fetchBookings(); // Refresh the bookings list after deletion
         setIsDeleteModalVisible(false); // Close delete modal
+        window.location.reload();
     } catch (error) {
         message.error("Failed to delete booking.");
     }
@@ -160,6 +161,7 @@ function ManageParkings() {
             });
             message.success(`Cancellation request ${action === 'approve' ? 'approved' : 'declined'} successfully.`);
             fetchBookings(); // Refresh the bookings list after approval or decline
+            window.location.reload();
         } catch (error) {
             message.error(`Failed to ${action === 'approve' ? 'approve' : 'decline'} cancellation request.`);
         }
@@ -187,7 +189,6 @@ function ManageParkings() {
         }
     };
 
-
     const handleDateChange = (date) => {
         setBookingDate(date);
     };
@@ -208,7 +209,7 @@ function ManageParkings() {
             setEmployeeId(''); // Clear employee ID
             setDutyDate('');
         } catch (error) {
-            setMessage(`Error: ${error.response?.data.message || error.message}`);
+           
         }
     };
     
@@ -255,7 +256,6 @@ function ManageParkings() {
         setDepartment(selectedDepartment);
         fetchEmployeesByDepartment(selectedDepartment);
     };
-
 
     // Generate PDF with selected columns
     const generatePDF = () => {
@@ -389,8 +389,12 @@ function ManageParkings() {
                 <div className="actions-container2345">
                         {record.status === 'pending' && (
                     <>
-                        <Button onClick={() => handleApproveDecline(record.parkingId, 'approve')}>Approve</Button>
-                        <Button onClick={() => handleApproveDecline(record.parkingId, 'decline')}>Decline</Button>
+                        <Button onClick={() => {handleApproveDecline(record.parkingId, 'approve');
+                            window.location.reload();
+                        }}>Approve</Button>
+                        <Button onClick={() =>{ handleApproveDecline(record.parkingId, 'decline');
+                            window.location.reload();
+                        }}>Decline</Button>
                     </>
                 )}
                     <Button onClick={() => handleEdit(record)} className="edit-button2345"  style={{ marginRight: '20px' }} >
@@ -440,7 +444,6 @@ function ManageParkings() {
             </div>
 
             
-
 
             <div style={{ display: "flex", flexDirection: "row", justifyContent: "space-between", padding: "20px", marginTop: "20px", marginBottom: "20px" }}>
   {/* Left Column - Assign Duty Date */}
@@ -530,7 +533,6 @@ function ManageParkings() {
 
 
 
-
 <Table
   columns={columns}
   dataSource={filteredBookings}
@@ -544,13 +546,13 @@ function ManageParkings() {
   rowKey="parkingId"
 />
 
-
             {/* Edit Modal */}
             <Modal
                 title="Edit Booking"
                 visible={isModalVisible}
                 onOk={handleUpdate}
-                onCancel={() => setIsModalVisible(false)}
+                onCancel={() => {setIsModalVisible(false);
+                    window.location.reload();}}
                 okText="Update"
                 cancelText="Cancel"
             >
@@ -574,6 +576,7 @@ function ManageParkings() {
                             value={bookingDate}
                             onChange={handleDateChange}
                         />
+                        
                     </div>
                     <hr />
                     <div>
@@ -595,7 +598,9 @@ function ManageParkings() {
                 title="Confirm Delete"
                 visible={isDeleteModalVisible}
                 onOk={handleDelete}
-                onCancel={() => setIsDeleteModalVisible(false)}
+                onCancel={() => {setIsDeleteModalVisible(false);
+                    window.location.reload();}
+                }
                 okText="Yes, Delete"
                 cancelText="Cancel"
             >
@@ -607,8 +612,12 @@ function ManageParkings() {
             <Modal
                 title="Booking Details"
                 visible={viewModalVisible}
-                onOk={() => setViewModalVisible(false)}
-                onCancel={() => setViewModalVisible(false)}
+                onOk={() => {setViewModalVisible(false);
+                    window.location.reload();}
+                }
+                onCancel={() => {setViewModalVisible(false);
+                    window.location.reload();}
+                }
             >
                 {selectedBooking && (
                     <div>
@@ -629,7 +638,4 @@ function ManageParkings() {
 }
 
 export default ManageParkings;
-
-
-
 
