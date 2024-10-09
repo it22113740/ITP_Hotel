@@ -44,13 +44,7 @@ const ManageRooms = () => {
         const [form] = Form.useForm(); // Form instance for add room
         const [updateForm] = Form.useForm(); // Form instance for update room
 
-
-        const [selectedSecurityEmployee, setSelectedSecurityEmployee] = useState(null);
-        const [employees, setEmployees] = useState([]);
-        const [selectedEmployeeData, setSelectedEmployeeData] = useState(null);
-        
-        const [selectedDate, setSelectedDate] = useState("");
-
+        const [reservations, setReservations] = useState([]);
 
         const OPTIONS = [
                 "WiFi",
@@ -99,30 +93,75 @@ const ManageRooms = () => {
                 setEditingRoom(null);
         };
 
-
-
-        const fetchEmployeesByDepartment = async (department) => {
+        const fetchReservations = async () => {
                 try {
-                    const response = await axios.get(`/api/employee/getEmployeesByDepartment/${department}`);
-                    setEmployees(response.data);
+                  const response = await axios.get('/api/room/getBookings');
+                  console.log(response.data); // Log response to see if it contains 'bookings'
+                  setReservations(response.data.bookings); // Use 'bookings', not 'reservations'
                 } catch (error) {
-                    message.error(error.response?.data?.message || "Failed to fetch employees.");
+                  console.error('Error fetching reservations:', error);
+                  message.error('Failed to fetch reservations.');
                 }
-            };
+              };
+              
+              
+              // Fetch reservations data when component mounts
+              useEffect(() => {
+              fetchReservations();
+              console.log(reservations); // Check if reservations state has the correct data after setting it
+              }, [reservations]);
+
+
+              const column= [
+                {
+                  title: 'Booking ID',
+                  dataIndex: 'bookingID',
+                  key: 'bookingID',
+                },
+                {
+                  title: 'Room Number',
+                  dataIndex: 'roomNumber',
+                  key: 'roomNumber',
+                },
+                {
+                  title: 'Guest Name',
+                  dataIndex: 'guestName',
+                  key: 'guestName',
+                },
+                {
+                  title: 'Email',
+                  dataIndex: 'guestEmail',
+                  key: 'guestEmail',
+                },
+                {
+                  title: 'Phone',
+                  dataIndex: 'guestPhone',
+                  key: 'guestPhone',
+                },
+                {
+                  title: 'Check-in Date',
+                  dataIndex: 'checkInDate',
+                  key: 'checkInDate',
+                },
+                {
+                  title: 'Check-out Date',
+                  dataIndex: 'checkOutDate',
+                  key: 'checkOutDate',
+                },
+                {
+                  title: 'Total Amount',
+                  dataIndex: 'totalAmount',
+                  key: 'totalAmount',
+                },
+              ];
+
+
         
-            const handleShowSecurityEmployees = () => {
-                fetchEmployeesByDepartment("Security");
-            };
+        
+            
 
 
-            const handleEmployeeSelection = (employeeId) => {
-                const selectedEmployee = employees.find(emp => emp._id === employeeId);
-                setSelectedSecurityEmployee(employeeId);
-                setSelectedEmployeeData({
-                    name: selectedEmployee.firstName,
-                    imageUrl: selectedEmployee.profilePictureUrl || null,
-                });
-            };
+            
 
 
         // Fetch rooms from the API
@@ -534,39 +573,15 @@ const ManageRooms = () => {
                                 </div>
 
 
-            <DatePicker
-            onChange={(date) => setSelectedDate(date)}
-            value={selectedDate}
-            style={{ width: 200, marginRight: '10px' }}
-            placeholder="Select Date"
-        />
         
-        {/* Security employee selection */}
-        <Select
-            style={{ width: 200 }}
-            placeholder="Select Security Employee"
-            onChange={handleEmployeeSelection}
-            onFocus={handleShowSecurityEmployees}
-        >
-            {employees.map(employee => (
-                <Select.Option key={employee._id} value={employee._id}>
-                    {employee.firstName}
-                </Select.Option>
-            ))}
+        
+       
 
-            
-        </Select>
-        
-        {selectedDate && selectedEmployeeData && (
-            <div style={{ marginTop: '20px' }}>
-                <Avatar
-                    size={100}
-                    src={selectedEmployeeData.imageUrl}
-                    icon={<UserOutlined />}
-                />
-                <h3>{selectedEmployeeData.name}</h3>
-            </div>
-        )}
+<Table
+      columns={column}   // Use the column structure defined above
+      dataSource={reservations}  // reservations data fetched from the backend
+      rowKey="bookingID"   // Unique key for each row
+    />
 
                                 <div className="Type_Distribution">
                                         <RoomAnalyticsDashboard />
