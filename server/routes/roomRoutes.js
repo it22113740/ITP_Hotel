@@ -64,6 +64,8 @@ router.post("/addRoom", async (req, res) => {
             });
       }
 
+      
+
       // if (!roomNumber || !roomType || !price) {
       //       return res.status(400).json({ message: "Room number, type, and price are required." });
       // }
