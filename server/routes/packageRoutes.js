@@ -21,7 +21,7 @@ const sendEmail = async (reservationData) => {
       from: 'your-email@gmail.com',
       to: reservationData.guestEmail,
       subject: 'Reservation Confirmation',
-      text: `Dear ${reservationData.guestName},\n\nThank you for reserving the package "${reservationData.packageName}" with us. Your reservation details are as follows:\n\nPackage: ${reservationData.packageName}\nStart Date: ${reservationData.startDate}\nEnd Date: ${reservationData.endDate}\nTotal Amount: Rs ${reservationData.totalAmount}\n\nWe look forward to serving you!\n\nBest regards,\nYour Company Name`,
+      text: `Dear Cutomer,${reservationData.guestName},\n\nThank you for reserving the package "${reservationData.packageName}" with us. Your reservation details are as follows:\n\nPackage: ${reservationData.packageName}\nStart Date: ${reservationData.startDate}\nEnd Date: ${reservationData.endDate}\nTotal Amount: Rs ${reservationData.totalAmount}\n\nWe look forward to serving you.Please feel free to contact us anytime.!\n\nBest regards,\nSixth Gear`,
     };
 
     await transporter.sendMail(mailOptions);
