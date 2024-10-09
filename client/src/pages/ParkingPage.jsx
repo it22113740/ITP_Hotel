@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { message } from "antd";
 import parkingImg from "../assets/Images/ParkingImg.png";
-
+import QRCode from "qrcode";
 function ParkingPage() {
     // State to store the selected date for booking
     const [selectedDate, setSelectedDate] = useState("");
@@ -113,7 +113,6 @@ function ParkingPage() {
         }
 
 
-
         // Vehicle number validation: 3 capital letters followed by 4 digits
     const vehicleNumberPattern = /^[A-Z]{3}[0-9]{4}$/;
     if (!vehicleNumberPattern.test(vehicleNumber)) {
@@ -150,14 +149,17 @@ function ParkingPage() {
                 bookingDuration,
                 price,
             };
+
+            const qrData = `Vehicle: ${vehicleNumber}, Slot: ${selectedSlot}, Date: ${selectedDate}, Duration: ${bookingDuration}, Price: LKR ${price}`;
+        const qrCodeUrl = await QRCode.toDataURL(qrData); // Generate QR code
     
             await axios.post("/api/parking/send-gatepass", {
                 userEmail: user.email, // Assuming user.email is available in your user object
                 bookingDetails,
+                qrCode: qrCodeUrl,
             });
     
             message.success("Gate pass sent to your email.");
-
 
              // Clear the form fields after successful booking
         setVehicleNumber(""); // Reset vehicle number
@@ -267,6 +269,7 @@ function ParkingPage() {
                         placeholder="Select date"
                         disabled={selectedDate ? false : true} // Disable input if no date is selected
                     />
+                    
                     <select
                         className="duration-select1244"
                         value={bookingDuration}
@@ -292,3 +295,5 @@ function ParkingPage() {
 }
 
 export default ParkingPage;
+
+

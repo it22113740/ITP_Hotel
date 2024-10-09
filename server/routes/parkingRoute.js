@@ -115,7 +115,6 @@ router.post('/cancel-booking', async (req, res) => {
 
 
 
-
 // Endpoint to update a parking booking using POST
 router.post('/update', async (req, res) => {
     const { parkingId, bookingDate, vehicleNumber } = req.body;
@@ -150,15 +149,16 @@ router.get('/getAllParkings', async (req, res) => {
 });
 
 router.post('/send-gatepass', async (req, res) => {
-    const { userEmail, bookingDetails } = req.body;
+    const { userEmail, bookingDetails, qrCode } = req.body;
 
     try {
         // Send the gate pass email
-        await parkingMail.sendGatePassEmail(userEmail, bookingDetails);
+        await parkingMail.sendGatePassEmail(userEmail, bookingDetails, qrCode);
         res.status(200).json({ message: "Gate pass email sent successfully." });
     } catch (error) {
         res.status(500).json({ message: "Failed to send gate pass email.", error });
     }
+    
 });
 router.get('/availability/today', async (req, res) => {
     const systemDate = new Date().toISOString().split('T')[0]; // Get the system date in YYYY-MM-DD format
@@ -204,5 +204,5 @@ router.get('/availability/date', async (req, res) => {
 
 
 
-
 module.exports = router;
+

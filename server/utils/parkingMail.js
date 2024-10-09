@@ -12,7 +12,7 @@ let transporter = nodemailer.createTransport({
 });
 
 class parkingMail {
-    static async sendGatePassEmail(userEmail, bookingDetails) {
+    static async sendGatePassEmail(userEmail, bookingDetails,qrCode) {
         try {
             const { vehicleNumber, selectedSlot, selectedDate, bookingDuration, price } = bookingDetails;
             const logoUrl = "https://i.ibb.co/1Kp8CXg/6th-gear-Logo.png";
@@ -112,7 +112,15 @@ class parkingMail {
                         </div>
                     </div>
                 `
+                ,attachments: [
+                    {
+                        filename: 'qrcode.png',
+                        content: qrCode.split("base64,")[1],
+                        encoding: "base64",
+                    },
+                ],
             };
+            
 
             const info = await transporter.sendMail(mailOptions);
             console.log("Gate pass email sent: ", info.response);
@@ -123,3 +131,4 @@ class parkingMail {
 }
 
 module.exports = parkingMail;
+
