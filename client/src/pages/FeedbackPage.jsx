@@ -18,19 +18,17 @@ const FeedbackPage = () => {
     const [currentFeedback, setCurrentFeedback] = useState(null);
 
     // Fetch user ID from local storage
-    const fetchUserByID = useCallback(() => {
-        const userJSON = localStorage.getItem("currentUser");
-        if (!userJSON) {
-            console.error("User not found in localStorage.");
-            return;
-        }
-        const user = JSON.parse(userJSON);
-        setUserID(user.userID); // Retrieve and set userID
-    }, []);
-
     useEffect(() => {
-        fetchUserByID();
-    }, [fetchUserByID]);
+        // Fetch user ID from local storage
+        const userJSON = localStorage.getItem("currentUser");
+        if (userJSON) {
+            const user = JSON.parse(userJSON);
+            setUserID(user.userID);  // Set user ID from the stored user data
+        } else {
+            // If user is not logged in, show a toast message
+            message.error('Please log in to add feedback');
+        }
+    }, []);
 
     useEffect(() => {
         fetchFeedbacks();
@@ -51,6 +49,10 @@ const FeedbackPage = () => {
     };
 
     const handleAddFeedback = async (values) => {
+        if (!userID) {
+            message.error('Please log in to add feedback');
+            return;
+        }
         try {
             console.log("Submitting feedback with values:", values);
             console.log("User ID:", userID);
@@ -136,9 +138,9 @@ const FeedbackPage = () => {
                 <Button type="primary" style={{ backgroundColor: '#25b05f', marginLeft: '900px'}} onClick={() => setVisibleAdd(true)}>
                     Add Feedback 
                 </Button>
-                <Button type="primary" style={{ backgroundColor: '#25b05f' }} onClick={() => window.location.href =" http://localhost:3002"}>
+                {/* <Button type="primary" style={{ backgroundColor: '#25b05f' }} onClick={() => window.location.href =" http://localhost:3002"}>
                   Chatbot
-                </Button>
+                </Button> */}
                 
                 
             </div>

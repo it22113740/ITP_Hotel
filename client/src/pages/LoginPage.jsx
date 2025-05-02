@@ -132,7 +132,7 @@ function LoginPage() {
                             </button>
                             <p className="sg_signup_txt_main">
                                 Don't have an account?{" "}
-                                <a href="/" className="sg_signup_link">
+                                <a href="/signup" className="sg_signup_link">
                                     Sign up
                                 </a>
                             </p>
