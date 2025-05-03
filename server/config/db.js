@@ -1,7 +1,7 @@
 const { default: mongoose } = require('mongoose');
 mongoose.set('strictQuery', true);
 
-const mongoURL = process.env.MONGODB_URI
+const mongoURL = process.env.MONGODB_URL
 
 mongoose.connect(mongoURL);
 

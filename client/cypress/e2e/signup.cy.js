@@ -68,36 +68,39 @@ describe('Signup Page', () => {
     });
   
     it('should submit the form successfully with valid data', () => {
-        // Fill in the form with valid data
-        cy.get('input[name="firstName"]').type('John');
-        cy.get('input[name="lastName"]').type('Doe');
-        cy.get('input[name="email"]').type('john.doe@example.com');
-        cy.get('input[name="username"]').type('john_doe');
-        cy.get('input[name="password"]').type('password123');
-        cy.get('input[name="confirmPassword"]').type('password123');
-        
-        // Attach the profile picture
-        cy.get('input[name="profilePic"]').attachFile('profile-pic.jpg');  // Ensure the image is in the fixtures folder
-      
-        cy.get('input[name="agreeToTerms"]').check();  // Agree to terms
-      
-        // Mock the API call for a successful signup
-        cy.intercept('POST', 'http://localhost:5000/api/user/signup', {
-          statusCode: 201,
-          body: {
-            message: 'User created successfully.',
-            user: { username: 'john_doe' },
-          },
-        }).as('signupRequest');
-      
-        // Click submit button
-        cy.get('button[type="submit"]').click();
-      
-        // Check if the success message appears
-        cy.contains('User created successfully.');
-      
-        // Check if the user is redirected to the home page (or wherever you're redirecting)
-        cy.url().should('eq', 'http://localhost:3000/');
-      });
+      // Fill in the form with valid data
+      cy.get('input[name="firstName"]').type('John');
+      cy.get('input[name="lastName"]').type('Doe');
+      cy.get('input[name="email"]').type('john.doe@example.com');
+      cy.get('input[name="username"]').type('john_doe');
+      cy.get('input[name="password"]').type('password123');
+      cy.get('input[name="confirmPassword"]').type('password123');
+  
+      // Attach the profile picture
+      cy.get('input[name="profilePic"]').selectFile('cypress/fixtures/profilepic.jpg');
+  
+      cy.get('input[name="agreeToTerms"]').check(); // Agree to terms
+  
+      // Mock the API call for a successful signup
+      cy.intercept('POST', '/api/user/signup', {
+        statusCode: 201,
+        body: {
+          message: 'User created successfully.',
+          user: { username: 'john_doe' },
+        },
+      }).as('signupRequest');
+  
+      // Click submit button
+      cy.get('button[type="submit"]').click();
+  
+      // Wait for the API request to complete
+      cy.wait('@signupRequest');
+  
+      // Check if the success message appears
+      cy.contains('User created successfully.', { timeout: 10000 }); // Wait up to 10 seconds for the message to appear
+  
+      // Check if the user is redirected to the home page
+      cy.url().should('eq', 'http://localhost:3000/');
+    });
   });
   
