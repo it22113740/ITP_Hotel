@@ -11,7 +11,7 @@ router.get('/availability', async (req, res) => {
         const bookedSlots = bookings.map(booking => booking.parkingId);
         const allSlots = Array.from({ length: 50 }, (_, i) => i < 20 ? `B${i + 1}` : `C${i - 19}`);
         const availableSlots = allSlots.filter(slot => !bookedSlots.includes(slot));
-        res.json(availableSlots);
+        res.status(200).json(availableSlots);
     } catch (error) {
         res.status(500).json({ message: "Error fetching availability" });
     }
@@ -34,7 +34,7 @@ router.post('/book', async (req, res) => {
             price : Price
         });
         await newBooking.save();
-        res.json({ message: "Parking slot booked successfully." });
+        res.status(200).json({ message: "Parking slot booked successfully." });
     } catch (error) {
         console.log(error);
         res.status(500).json({ message: "Error booking the parking slot." });
